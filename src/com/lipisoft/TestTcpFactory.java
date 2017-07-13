@@ -71,11 +71,11 @@ class TestTcpFactory {
     }
 
     private boolean isEqualSequenceNumber() {
-        return tcp.getSeq() == seq;
+        return tcp.getSequenceNumber() == seq;
     }
 
     private boolean isEqualAcknowledgeNumber() {
-        return tcp.getAck() == ack;
+        return tcp.getAcknowledgeNumber() == ack;
     }
 
     private boolean isEqualDataOffset() {

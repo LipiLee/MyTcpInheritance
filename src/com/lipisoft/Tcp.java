@@ -13,10 +13,8 @@ public class Tcp {
     private final int sourcePort;
     private final int destinationPort;
 
-    // The size of seq and ack is enough 32 bits(int size),
-    // but their type is long, not int because Java can NOT support unsigned int
-    private final long seq;
-    private final long ack;
+    private final int sequenceNumber;
+    private final int acknowledgeNumber;
 
     private final byte dataOffset;
     private final boolean NS;
@@ -30,13 +28,13 @@ public class Tcp {
     private final boolean FIN;
 
     // The window size is enough 16 bits,
-    // but their type is int, not short because its value can be changed
-    private final int windowSize;
-    private final int checksum;
-    private final int urgentPointer;
+    // but their type is int, not short because Java can NOT support unsigned int
+    private final short windowSize;
+    private final short checksum;
+    private final short urgentPointer;
 
-    private final int maxSegmentSize;
-    private final short windowScale;
+    private final short maxSegmentSize;
+    private final byte windowScale;
     private final boolean selectiveAckPermitted;
     private final List<SelectiveAck> selectiveAcks;
     private final TimeStamp time;
@@ -46,10 +44,10 @@ public class Tcp {
     private final ByteBuffer tcpPayloadStream;
 
     static class IncomingTcpBuilder extends TcpBuilder {
-        IncomingTcpBuilder(int sourcePort, int destinationPort, long seq, long ack,
+        IncomingTcpBuilder(int sourcePort, int destinationPort, int seq, int ack,
                                   byte dataOffset, boolean NS, boolean CWR, boolean ECE, boolean URG,
                                   boolean ACK, boolean PSH, boolean RST, boolean SYN, boolean FIN,
-                                  int windowSize, int checksum, int urgentPointer) {
+                                  short windowSize, short checksum, short urgentPointer) {
             this.sourcePort = sourcePort;
             this.destinationPort = destinationPort;
             this.seq = seq;
@@ -81,15 +79,15 @@ public class Tcp {
         private final int destinationAddress;
 
         OutgoingTcpBuilder(int sourceAddress, int destinationAddress,
-                                  int sourcePort, int destinationPort,
-                                  long seq, long ack,
+                                  short sourcePort, short destinationPort,
+                                  int seq, int ack,
 //                           byte dataOffset,
                                   boolean NS, boolean CWR, boolean ECE,
                                   boolean URG,
                                   boolean ACK, boolean PSH, boolean RST, boolean SYN,
-                                  boolean FIN, int windowSize,
-//                           int checksum,
-                                  int urgentPointer) {
+                                  boolean FIN, short windowSize,
+//                           short checksum,
+                                  short urgentPointer) {
             this.sourceAddress = sourceAddress;
             this.destinationAddress = destinationAddress;
 
@@ -145,38 +143,41 @@ public class Tcp {
 
         private void createTcpOptionStream() {
             // maximum size can be 40 bytes for options
-            tcpOptionStream = ByteBuffer.allocate(MAX_TCP_OPTIONS_SIZE_BYTES);
+            ByteBuffer buffer = ByteBuffer.allocate(MAX_TCP_OPTIONS_SIZE_BYTES);
             if (isAssignedMaxSegmentSize()) {
-                writeMaxSegementSize(tcpOptionStream);
+                writeMaxSegementSize(buffer);
             }
 
             if (isAssignedWindowScale()) {
-                writeWindowScale(tcpOptionStream);
+                writeWindowScale(buffer);
             }
 
             if (isAssignedSelectiveAckPermitted()) {
-                writeSelectiveAckPermitted(tcpOptionStream);
+                writeSelectiveAckPermitted(buffer);
             }
 
             if (isAssignedSelectiveAcks()) {
-                writeSelectiveAcks(tcpOptionStream);
+                writeSelectiveAcks(buffer);
             }
 
             if (isAssignedTimeStamp()) {
-                writeTimeStamp(tcpOptionStream);
+                writeTimeStamp(buffer);
             }
 
             // 32-bit boundaries for better performance
-            while (tcpOptionStream.position() % 4 != 0) {
+            while (buffer.position() % 4 != 0) {
                 // Add NOP(No operation)
-                tcpOptionStream.put((byte) 1);
+                buffer.put((byte) 1);
             }
 
-            tcpOptionStream.
+            int size = buffer.position();
+            tcpOptionStream = ByteBuffer.allocate(size);
+            buffer.flip();
+            tcpOptionStream.put(buffer);
         }
 
         private void setDataOffset() {
-            final int optionsLength = tcpOptionStream.array().length;
+            final int optionsLength = tcpOptionStream.capacity();
             dataOffset = (byte) ((TCP_HEADER_SIZE_BYTES + optionsLength) / 4);
             final byte dataOffsetAndNs = (byte) (dataOffset << 4 + (NS ? 1 : 0));
             tcpHeaderStream.put(12, dataOffsetAndNs);
@@ -270,11 +271,11 @@ public class Tcp {
         }
 
         private boolean isAssignedMaxSegmentSize() {
-            return maxSegmentSize != 0;
+            return maxSegmentSize != -1;
         }
 
         private boolean isAssignedWindowScale() {
-            return windowScale != 0;
+            return windowScale != -1;
         }
 
         private boolean isAssignedSelectiveAckPermitted() {
@@ -282,11 +283,11 @@ public class Tcp {
         }
 
         private boolean isAssignedSelectiveAcks() {
-            return selectiveAcks != null;
+            return selectiveAcks.size() != 0;
         }
 
         private boolean isAssignedTimeStamp() {
-            return time != null;
+            return time.getSender() != -1 && time.getEchoReply() != -1;
         }
 
         Tcp build() {
@@ -302,8 +303,8 @@ public class Tcp {
     Tcp(@NotNull TcpBuilder builder) {
         this.sourcePort = builder.sourcePort;
         this.destinationPort = builder.destinationPort;
-        this.seq = builder.seq;
-        this.ack = builder.ack;
+        this.sequenceNumber = builder.seq;
+        this.acknowledgeNumber = builder.ack;
         this.dataOffset = builder.dataOffset;
         this.NS = builder.NS;
         this.CWR = builder.CWR;
@@ -339,10 +340,10 @@ public class Tcp {
         if (FIN) sb.append("F");
         if (RST) sb.append("R");
         // int(signed) is 32bit, so extend it to long(64bit) for printing
-        long unsignedFormat = seq & 0xFFFF;
-        sb.append(", seq: ").append(unsignedFormat);
-        unsignedFormat = ack & 0xFFFF;
-        sb.append(", ack: ").append(unsignedFormat);
+        long unsignedFormat = sequenceNumber & 0xFFFF;
+        sb.append(", sequenceNumber: ").append(unsignedFormat);
+        unsignedFormat = acknowledgeNumber & 0xFFFF;
+        sb.append(", acknowledgeNumber: ").append(unsignedFormat);
         sb.append(")");
         return sb.toString();
     }
@@ -355,12 +356,12 @@ public class Tcp {
         return destinationPort;
     }
 
-    long getSeq() {
-        return seq;
+    int getSequenceNumber() {
+        return sequenceNumber;
     }
 
-    long getAck() {
-        return ack;
+    int getAcknowledgeNumber() {
+        return acknowledgeNumber;
     }
 
     byte getDataOffset() {
@@ -403,23 +404,23 @@ public class Tcp {
         return FIN;
     }
 
-    int getWindowSize() {
+    short getWindowSize() {
         return windowSize;
     }
 
-    int getChecksum() {
+    short getChecksum() {
         return checksum;
     }
 
-    int getUrgentPointer() {
+    short getUrgentPointer() {
         return urgentPointer;
     }
 
-    int getMaxSegmentSize() {
+    short getMaxSegmentSize() {
         return maxSegmentSize;
     }
 
-    short getWindowScale() {
+    byte getWindowScale() {
         return windowScale;
     }
 

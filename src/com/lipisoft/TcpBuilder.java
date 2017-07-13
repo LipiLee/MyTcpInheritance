@@ -3,16 +3,15 @@ package com.lipisoft;
 import com.sun.istack.internal.NotNull;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.List;
 
 abstract class TcpBuilder {
     int sourcePort;
     int destinationPort;
 
-    // The size of seq and ack is enough 32 bits(int size),
-    // but their type is long, not int because its value can be changed
-    long seq;
-    long ack;
+    int seq;
+    int ack;
 
     byte dataOffset;
     boolean NS;
@@ -27,48 +26,61 @@ abstract class TcpBuilder {
 
     // The window size is enough 16 bits,
     // but their type is int, not short because its value can be changed
-    int windowSize;
-    int checksum;
-    int urgentPointer;
+    short windowSize;
+    short checksum;
+    short urgentPointer;
 
     // optional
-    int maxSegmentSize = 0;
-    short windowScale = 0;
+    short maxSegmentSize = -1;
+    byte windowScale = -1;
     boolean selectiveAckPermitted = false;
-    List<SelectiveAck> selectiveAcks = null;
-    TimeStamp time = null;
+    List<SelectiveAck> selectiveAcks = new ArrayList<>();
+    TimeStamp time = new TimeStamp(-1, -1);
 
-    ByteBuffer tcpHeaderStream;
-    ByteBuffer tcpOptionStream = null;
-    ByteBuffer tcpPayloadStream = null;
+    ByteBuffer tcpStream;
+    ByteBuffer tcpHeaderStream = null;
+    ByteBuffer tcpOptionStream = ByteBuffer.allocate(0);
+    ByteBuffer tcpPayloadStream = ByteBuffer.allocate(0);
 
     abstract Tcp build();
 
-    TcpBuilder applyMaxSegmentSize(int maxSegmentSize) {
+    @NotNull
+    TcpBuilder applyMaxSegmentSize(short maxSegmentSize) {
         this.maxSegmentSize = maxSegmentSize;
         return this;
     }
 
-    TcpBuilder applyWindowScale(short windowScale) {
+    @NotNull
+    TcpBuilder applyWindowScale(byte windowScale) {
         this.windowScale = windowScale;
         return this;
     }
 
+    @NotNull
     TcpBuilder applySelectiveAckPermitted(boolean selectiveAckPermitted) {
         this.selectiveAckPermitted = selectiveAckPermitted;
         return this;
     }
 
+    @NotNull
     TcpBuilder applySelectiveAcks(@NotNull List<SelectiveAck> selectiveAcks) {
         this.selectiveAcks = selectiveAcks;
         return this;
     }
 
+    @NotNull
     TcpBuilder applyTimeStamp(@NotNull TimeStamp time) {
         this.time = time;
         return this;
     }
 
+    @NotNull
+    TcpBuilder applyTcpOption(@NotNull ByteBuffer tcpOptionStream) {
+        this.tcpOptionStream = tcpOptionStream;
+        return this;
+    }
+
+    @NotNull
     TcpBuilder applyTcpPayload(@NotNull ByteBuffer tcpPayloadStream) {
         this.tcpPayloadStream = tcpPayloadStream;
         return this;

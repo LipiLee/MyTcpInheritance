@@ -7,23 +7,23 @@ import java.nio.ByteBuffer;
 class IpV4Factory {
     @NotNull
     static IpV4 createIpV4(@NotNull ByteBuffer stream) {
-        final byte versionAndiHL = PacketUtility.get8BitsToByte(stream);
+        final byte versionAndiHL = stream.get();
         final byte version = (byte) ((versionAndiHL & 0xf0) >> 4);
         final byte internetHeaderLength = (byte) (versionAndiHL & 0x0f);
-        final byte dscpAndEcn = PacketUtility.get8BitsToByte(stream);
+        final byte dscpAndEcn = stream.get();
         final byte differentiatedServiceCodePoint = (byte) (dscpAndEcn >> 2);
         final byte explicitCongestionNotification = (byte) (dscpAndEcn & 0x3);
-        final short totalLength = PacketUtility.get16BitsToShort(stream);
-        final short identification = PacketUtility.get16BitsToShort(stream);
-        final short flagsAndFragmentOffset = PacketUtility.get16BitsToShort(stream);
+        final short totalLength = stream.getShort();
+        final short identification = stream.getShort();
+        final short flagsAndFragmentOffset = stream.getShort();
         final boolean doNotFragment = (flagsAndFragmentOffset & 0x4000) != 0;
         final boolean moreFragments = (flagsAndFragmentOffset & 0x2) != 0;
         final short fragmentOffset = (short) (flagsAndFragmentOffset & 0x1fff);
-        final byte timeToLive = PacketUtility.get8BitsToByte(stream);
-        final byte protocol = PacketUtility.get8BitsToByte(stream);
-        final short headerChecksum = PacketUtility.get16BitsToShort(stream);
-        final int sourceAddress = PacketUtility.get32BitsToInt(stream);
-        final int destinationAddress = PacketUtility.get32BitsToInt(stream);
+        final byte timeToLive = stream.get();
+        final byte protocol = stream.get();
+        final short headerChecksum = stream.getShort();
+        final int sourceAddress = stream.getInt();
+        final int destinationAddress = stream.getInt();
 
         final Tcp tcp = TcpFactory.createTCP(stream);
         final ByteBuffer ipStream = ByteBuffer.allocate(IpV4.IPV4_HEADER_SIZE);

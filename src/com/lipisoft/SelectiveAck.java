@@ -1,19 +1,19 @@
 package com.lipisoft;
 
-public class SelectiveAck {
-    private final long begin;
-    private final long end;
+class SelectiveAck {
+    private final int begin;
+    private final int end;
 
-    SelectiveAck(long begin, long end) {
+    SelectiveAck(int begin, int end) {
         this.begin = begin;
         this.end = end;
     }
 
-    public long getBegin() {
+    int getBegin() {
         return begin;
     }
 
-    public long getEnd() {
+    int getEnd() {
         return end;
     }
 }

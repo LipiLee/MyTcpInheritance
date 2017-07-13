@@ -1,19 +1,19 @@
 package com.lipisoft;
 
-public class TimeStamp {
-    private final long sender;
-    private final long echoReply;
+class TimeStamp {
+    private final int sender;
+    private final int echoReply;
 
-    TimeStamp(long sender, long echoReply) {
+    TimeStamp(int sender, int echoReply) {
         this.sender = sender;
         this.echoReply = echoReply;
     }
 
-    public long getSender() {
+    int getSender() {
         return sender;
     }
 
-    public long getEchoReply() {
+    int getEchoReply() {
         return echoReply;
     }
 }

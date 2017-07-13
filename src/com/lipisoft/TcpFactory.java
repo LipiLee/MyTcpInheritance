@@ -17,11 +17,11 @@ class TcpFactory {
 
     @NotNull
     static Tcp createTCP(@NotNull ByteBuffer packet) throws RuntimeException {
-        final int sourcePort = PacketUtility.get16BitsToInt(packet);
-        final int destinationPort = PacketUtility.get16BitsToInt(packet);
-        final long seq = PacketUtility.get32BitsToLong(packet);
-        final long ack = PacketUtility.get32BitsToLong(packet);
-        final byte dataOffsetAndNs = PacketUtility.get8BitsToByte(packet);
+        final short sourcePort = packet.getShort();
+        final short destinationPort = packet.getShort();
+        final int seq = packet.getInt();
+        final int ack = packet.getInt();
+        final byte dataOffsetAndNs = packet.get();
 
         final byte dataOffset = (byte) (((dataOffsetAndNs & 0xF0) >>> 4));
         if (dataOffset < 5 && dataOffset > 15) {
@@ -29,7 +29,7 @@ class TcpFactory {
         }
 
         final boolean NS = (dataOffsetAndNs & 0x01) == 1;
-        final byte controlBits = PacketUtility.get8BitsToByte(packet);
+        final byte controlBits = packet.get();
         final boolean CWR = ((controlBits >> 7) & 1) == 1;
         final boolean ECE = ((controlBits >> 6) & 1) == 1;
         final boolean URG = ((controlBits >> 5) & 1) == 1;
@@ -38,9 +38,9 @@ class TcpFactory {
         final boolean RST = ((controlBits >> 2) & 1) == 1;
         final boolean SYN = ((controlBits >> 1) & 1) == 1;
         final boolean FIN = (controlBits & 1) == 1;
-        final int windowSize = PacketUtility.get16BitsToInt(packet);
-        final int checksum = PacketUtility.get16BitsToInt(packet);
-        final int urgentPointer = PacketUtility.get16BitsToInt(packet);
+        final short windowSize = packet.getShort();
+        final short checksum = packet.getShort();
+        final short urgentPointer = packet.getShort();
 
         final Tcp.IncomingTcpBuilder builder = new Tcp.IncomingTcpBuilder(sourcePort, destinationPort, seq, ack,
                 dataOffset, NS, CWR, ECE, URG, ACK, PSH, RST, SYN, FIN, windowSize, checksum, urgentPointer);
@@ -97,23 +97,23 @@ class TcpFactory {
         int index = 0;
 
         while (index < optionsSize) {
-            final byte optionKind = PacketUtility.get8BitsToByte(packet);
+            final byte optionKind = packet.get();
             index++;
 
             if (optionKind == END_OF_OPTIONS_LIST || optionKind == NO_OPERATION) {
                 continue;
             }
 
-            final byte size = PacketUtility.get8BitsToByte(packet);
+            final byte size = packet.get();
             index++;
 
             switch (optionKind) {
                 case MAX_SEGMENT_SIZE:
-                    builder.applyMaxSegmentSize(PacketUtility.get16BitsToInt(packet));
+                    builder.applyMaxSegmentSize(packet.getShort());
                     index += 2;
                     break;
                 case WINDOW_SCALE:
-                    builder.applyWindowScale(PacketUtility.get8BitsToShort(packet));
+                    builder.applyWindowScale(packet.get());
                     index++;
                     break;
                 case SELECTIVE_ACK_PERMITTED:
@@ -143,8 +143,8 @@ class TcpFactory {
     }
 
     private static TimeStamp obtainTimeStamp(@NotNull ByteBuffer packet) {
-        final long sender = PacketUtility.get32BitsToLong(packet);
-        final long echoReplyTo = PacketUtility.get32BitsToLong(packet);
+        final int sender = packet.getInt();
+        final int echoReplyTo = packet.getInt();
 
         return new TimeStamp(sender, echoReplyTo);
 
@@ -154,8 +154,8 @@ class TcpFactory {
         final List<SelectiveAck> selectiveAcks = new ArrayList<>();
 
         for (byte i = 2; i < size; i += 8) {
-            final long begin = PacketUtility.get32BitsToLong(packet);
-            final long end = PacketUtility.get32BitsToLong(packet);
+            final int begin = packet.getInt();
+            final int end = packet.getInt();
 
             final SelectiveAck selectiveAck = new SelectiveAck(begin, end);
             selectiveAcks.add(selectiveAck);

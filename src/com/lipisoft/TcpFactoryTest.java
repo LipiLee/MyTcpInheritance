@@ -40,10 +40,10 @@ public class TcpFactoryTest {
 
         final int sourceAddress = 0x11fd45ce;
         final int destinationAddress = 0xc0a8006b;
-        final int sourcePort = 80;
-        final int destinationPort = 57402;
-        final long sequence = 3713030391L;
-        final long acknowledgement = 1803144046;
+        final short sourcePort = 80;
+        final short destinationPort = (short) 0xe03a;
+        final int sequence = 0xdd5058f7;
+        final int acknowledgement = 1803144046;
         final boolean NS = false;
         final boolean CWR = false;
         final boolean ECE = false;
@@ -53,18 +53,18 @@ public class TcpFactoryTest {
         final boolean RST = false;
         final boolean SYN = true;
         final boolean FIN = false;
-        final int windowSize = 14480;
-        final int urgentPointer = 0;
+        final short windowSize = 14480;
+        final short urgentPointer = 0;
 
         final Tcp.OutgoingTcpBuilder builder = new Tcp.OutgoingTcpBuilder(sourceAddress, destinationAddress, sourcePort,
                 destinationPort, sequence, acknowledgement, NS, CWR, ECE, URG, ACK, PSH, RST, SYN, FIN, windowSize,
                 urgentPointer);
-        final long sender = 3827213360L;
-        final long echoReply = 690506430;
+        final int sender = 0xe41ea430;
+        final int echoReply = 690506430;
         final TimeStamp time = new TimeStamp(sender, echoReply);
-        final short windowScale = 8;
+        final byte windowScale = 8;
 
-        builder.applyMaxSegmentSize(1460).applySelectiveAckPermitted(true).applyTimeStamp(time)
+        builder.applyMaxSegmentSize((short)1460).applySelectiveAckPermitted(true).applyTimeStamp(time)
                 .applyWindowScale(windowScale);
         final Tcp tcp = builder.build();
 
@@ -126,10 +126,10 @@ public class TcpFactoryTest {
 
 //        final Tcp synTcpPacket = TcpFactory.createTCP(ByteBuffer.wrap(synPacketStream));
 
-        assertEquals(synTcpPacket.getSourcePort(), 57402);
+        assertEquals(synTcpPacket.getSourcePort(), (short) 0xe03a);
         assertEquals(synTcpPacket.getDestinationPort(), 80);
-        assertEquals(synTcpPacket.getSeq(), 1803144045);
-        assertEquals(synTcpPacket.getAck(), 0);
+        assertEquals(synTcpPacket.getSequenceNumber(), 1803144045);
+        assertEquals(synTcpPacket.getAcknowledgeNumber(), 0);
         assertEquals(synTcpPacket.getDataOffset(), 11);
         assertEquals(synTcpPacket.getNS(), false);
         assertEquals(synTcpPacket.getCWR(), false);
@@ -140,8 +140,8 @@ public class TcpFactoryTest {
         assertEquals(synTcpPacket.getRST(), false);
         assertEquals(synTcpPacket.getSYN(), true);
         assertEquals(synTcpPacket.getFIN(), false);
-        assertEquals(synTcpPacket.getWindowSize(), 65535);
-        assertEquals(synTcpPacket.getChecksum(), 0x92c6);
+        assertEquals(synTcpPacket.getWindowSize(), (short) 0xffff);
+        assertEquals(synTcpPacket.getChecksum(), (short) 0x92c6);
         assertEquals(synTcpPacket.getUrgentPointer(), 0);
 
         assertEquals(synTcpPacket.getMaxSegmentSize(), 1460);
@@ -182,10 +182,10 @@ public class TcpFactoryTest {
 
 //        final Tcp ackTcpPacket = TcpFactory.createTCP(ByteBuffer.wrap(ackPacketStream));
 
-        assertEquals(ackTcpPacket.getSourcePort(), 57402);
+        assertEquals(ackTcpPacket.getSourcePort(), (short) 57402);
         assertEquals(ackTcpPacket.getDestinationPort(), 80);
-        assertEquals(ackTcpPacket.getSeq(), 1803144046);
-        assertEquals(ackTcpPacket.getAck(), 3713030392L);
+        assertEquals(ackTcpPacket.getSequenceNumber(), 1803144046);
+        assertEquals(ackTcpPacket.getAcknowledgeNumber(), 0xdd5058f8);
         assertEquals(ackTcpPacket.getDataOffset(), 8);
         assertEquals(ackTcpPacket.getNS(), false);
         assertEquals(ackTcpPacket.getCWR(), false);
@@ -201,7 +201,7 @@ public class TcpFactoryTest {
         assertEquals(ackTcpPacket.getUrgentPointer(), 0);
 
         assertEquals(ackTcpPacket.getTime().getSender(), 690506665);
-        assertEquals(ackTcpPacket.getTime().getEchoReply(), 3827213360L);
+        assertEquals(ackTcpPacket.getTime().getEchoReply(), 0xe41ea430);
     }
 
     private void testTcpDataStream() {
@@ -247,10 +247,10 @@ public class TcpFactoryTest {
 
 //        final Tcp dataTcpPacket = TcpFactory.createTCP(ByteBuffer.wrap(dataPacketStream));
 
-        assertEquals(dataTcpPacket.getSourcePort(), 57402);
+        assertEquals(dataTcpPacket.getSourcePort(), (short) 57402);
         assertEquals(dataTcpPacket.getDestinationPort(), 80);
-        assertEquals(dataTcpPacket.getSeq(), 1803144046);
-        assertEquals(dataTcpPacket.getAck(), 3713030392L);
+        assertEquals(dataTcpPacket.getSequenceNumber(), 1803144046);
+        assertEquals(dataTcpPacket.getAcknowledgeNumber(), 0xdd5058f8);
         assertEquals(dataTcpPacket.getDataOffset(), 8);
         assertEquals(dataTcpPacket.getNS(), false);
         assertEquals(dataTcpPacket.getCWR(), false);
@@ -266,7 +266,7 @@ public class TcpFactoryTest {
         assertEquals(dataTcpPacket.getUrgentPointer(), 0);
 
         assertEquals(dataTcpPacket.getTime().getSender(), 690506667);
-        assertEquals(dataTcpPacket.getTime().getEchoReply(), 3827213360L);
+        assertEquals(dataTcpPacket.getTime().getEchoReply(), 0xe41ea430);
         assertArrayEquals(dataTcpPacket.getTcpPayloadStream().array(), dataStream);
     }
 }

@@ -6,10 +6,10 @@ public class Main {
     public static void main(String[] args) {
         final int sourceAddress = 0x11fd45ce;
         final int destinationAddress = 0xc0a8006b;
-        final int sourcePort = 80;
-        final int destinationPort = 57402;
-        final long seq = 3713030391L;
-        final long ack = 1803144046;
+        final short sourcePort = 80;
+        final short destinationPort = (short) 0xe03a;
+        final int seq = 0xdd5058f7;
+        final int ack = 1803144046;
         final boolean NS = false;
         final boolean CWR = false;
         final boolean ECE = false;
@@ -25,8 +25,8 @@ public class Main {
 
         final short maxSegmentSize = 1460;
         final boolean selectiveAckPermitted = true;
-        final TimeStamp timeStamp = new TimeStamp(3827213360L, 690506430);
-        final short windowScale = 8;
+        final TimeStamp timeStamp = new TimeStamp(0xe41ea430, 690506430);
+        final byte windowScale = 8;
 
         final Tcp synAckTcp = new Tcp.OutgoingTcpBuilder(sourceAddress, destinationAddress, sourcePort, destinationPort,
                 seq, ack, NS, CWR, ECE, URG, ACK, PSH, RST, SYN, FIN, windowSize, urgentPointer)
