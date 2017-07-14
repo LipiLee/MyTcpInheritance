@@ -9,30 +9,4 @@ class PacketUtility {
         return ((address >>> 24) & 0xFF) + "." + ((address >> 16) & 0xFF) + "." + ((address >> 8) & 0xFF) + "." +
                 (address & 0xFF);
     }
-
-/*
-    static byte get8BitsToByte(@NotNull ByteBuffer packet) {
-        return (byte) (packet.get() & 0xFF);
-    }
-
-    static short get8BitsToShort(@NotNull ByteBuffer packet) {
-        return (short) (packet.get() & 0xFF);
-    }
-
-    static short get16BitsToShort(@NotNull ByteBuffer packet) {
-        return (short) (packet.getShort() & 0xFFFF);
-    }
-
-    static int get16BitsToInt(@NotNull ByteBuffer packet) {
-        return packet.getShort() & 0xFFFF;
-    }
-
-    static int get32BitsToInt(@NotNull ByteBuffer packet) {
-        return packet.getInt();
-    }
-
-    static long get32BitsToLong(@NotNull ByteBuffer packet) {
-        return packet.getInt() & 0xFFFFFFFFL;
-    }
-*/
 }
