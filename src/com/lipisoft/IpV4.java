@@ -107,7 +107,7 @@ class IpV4 {
             stream.put((byte)((differentiatedServiceCodePoint << 2) | explicitCongestionNotification));
             stream.putShort(totalLength);
             stream.putShort(identification);
-            stream.putShort((short)((getFlags() << 5) | fragmentOffset));
+            stream.putShort((short)((getFlags() << 13) | fragmentOffset));
             stream.put(timeToLive);
             stream.put(protocol);
             stream.putShort((short) 0);
