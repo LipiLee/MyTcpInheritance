@@ -24,8 +24,6 @@ abstract class TcpBuilder {
     boolean SYN;
     boolean FIN;
 
-    // The window size is enough 16 bits,
-    // but their type is int, not short because its value can be changed
     short windowSize;
     short checksum;
     short urgentPointer;
