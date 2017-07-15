@@ -271,11 +271,11 @@ public class Tcp {
         }
 
         private boolean isAssignedMaxSegmentSize() {
-            return maxSegmentSize != -1;
+            return maxSegmentSize != 0;
         }
 
         private boolean isAssignedWindowScale() {
-            return windowScale != -1;
+            return windowScale != 0;
         }
 
         private boolean isAssignedSelectiveAckPermitted() {
@@ -287,7 +287,7 @@ public class Tcp {
         }
 
         private boolean isAssignedTimeStamp() {
-            return time.getSender() != -1 && time.getEchoReply() != -1;
+            return time.getSender() != 0 && time.getEchoReply() != 0;
         }
 
         Tcp build() {

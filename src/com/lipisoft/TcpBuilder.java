@@ -29,11 +29,11 @@ abstract class TcpBuilder {
     short urgentPointer;
 
     // optional
-    short maxSegmentSize = -1;
-    byte windowScale = -1;
+    short maxSegmentSize = 0;
+    byte windowScale = 0;
     boolean selectiveAckPermitted = false;
     List<SelectiveAck> selectiveAcks = new ArrayList<>();
-    TimeStamp time = new TimeStamp(-1, -1);
+    TimeStamp time = new TimeStamp(0, 0);
 
     ByteBuffer tcpStream;
     ByteBuffer tcpHeaderStream = null;
