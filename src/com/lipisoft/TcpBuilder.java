@@ -35,7 +35,6 @@ abstract class TcpBuilder {
     List<SelectiveAck> selectiveAcks = new ArrayList<>();
     TimeStamp time = new TimeStamp(0, 0);
 
-    ByteBuffer tcpStream;
     ByteBuffer tcpHeaderStream = null;
     ByteBuffer tcpOptionStream = ByteBuffer.allocate(0);
     ByteBuffer tcpPayloadStream = ByteBuffer.allocate(0);
