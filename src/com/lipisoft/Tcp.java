@@ -198,18 +198,18 @@ public class Tcp {
             while (tcpHeaderStream.hasRemaining()) {
                 sum += tcpHeaderStream.getShort();
             }
+            tcpHeaderStream.rewind();
 
-            if (tcpOptionStream != null) {
-                while (tcpOptionStream.hasRemaining()) {
-                    sum += tcpOptionStream.getShort();
-                }
+            while (tcpOptionStream.hasRemaining()) {
+                sum += tcpOptionStream.getShort();
             }
+            tcpOptionStream.rewind();
 
-            if (tcpPayloadStream != null) {
-                while (tcpPayloadStream.hasRemaining()) {
-                    sum += tcpPayloadStream.getShort();
-                }
+            while (tcpPayloadStream.hasRemaining()) {
+                sum += tcpPayloadStream.getShort();
             }
+            tcpPayloadStream.rewind();
+
 
             //carry over one's complement
             while((sum >> 16) > 0) {

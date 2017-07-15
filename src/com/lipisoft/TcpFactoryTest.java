@@ -91,11 +91,7 @@ public class TcpFactoryTest {
                 doNotFragment, moreFragment, fragmentOffset, timeToLive, protocol, sourceAddress, destinationAddress,
                 tcp).build();
         final ByteBuffer packetStream = ByteBuffer.allocate(60);
-        final ByteBuffer tcpHeaderStream = tcp.getTcpHeaderStream();
-        tcpHeaderStream.rewind();
-        final ByteBuffer tcpOptionStream = tcp.getTcpOptionStream();
-        tcpOptionStream.rewind();
-        packetStream.put(ip.getStream()).put(tcpHeaderStream).put(tcpOptionStream).put(tcp.getTcpPayloadStream());
+        packetStream.put(ip.getStream()).put(tcp.getTcpHeaderStream()).put(tcp.getTcpOptionStream()).put(tcp.getTcpPayloadStream());
 
 //        assertEquals(ByteBuffer.wrap(synAckPacketStream), packetStream);
         packetStream.rewind();
