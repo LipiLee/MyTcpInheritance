@@ -22,9 +22,9 @@ public class TcpFactoryTest {
     @Test
     public void createTCP() throws Exception {
         testTcpSynStream();
+        testSynAckStream();
         testTcpAckStream();
 //        testTcpDataStream();
-        testSynAckStream();
     }
 
     private void testSynAckStream() {
@@ -92,16 +92,15 @@ public class TcpFactoryTest {
                 tcp).build();
         final ByteBuffer packetStream = ByteBuffer.allocate(60);
         packetStream.put(ip.getStream()).put(tcp.getTcpHeaderStream()).put(tcp.getTcpOptionStream()).put(tcp.getTcpPayloadStream());
-
-//        assertEquals(ByteBuffer.wrap(synAckPacketStream), packetStream);
         packetStream.rewind();
+
         testStream(packetStream, version, internetHeaderLength, differentiatedServiceCodePoint,
                 explicitCongestionNotification, totalLength, identification,
                 doNotFragment, moreFragment, fragmentOffset, timeToLive, protocol, ip.getHeaderChecksum(),
                 sourceAddress, destinationAddress, sourcePort, destinationPort,
                 sequence, acknowledgement, tcp.getDataOffset(), NS, CWR, ECE, URG,
                 ACK, PSH, RST, SYN, FIN, windowSize, tcp.getChecksum(), urgentPointer,
-                maxSegmentSize, windowScale, selectiveAckPermitted, sender, echoReply);
+                maxSegmentSize, windowScale, selectiveAckPermitted, sender, echoReply, ByteBuffer.allocate(0));
 
     }
 
@@ -113,7 +112,7 @@ public class TcpFactoryTest {
                             int acknowledgeNumber, byte dataOffset, boolean NS, boolean CWR, boolean ECE, boolean URG,
                             boolean ACK, boolean PSH, boolean RST, boolean SYN, boolean FIN, short windowSize,
                             short checksum, short urgentPointer, short maximumSegmentSize, byte windowScale,
-                            boolean selectiveAcknowledgePermitted, int senderTime, int echoTime) {
+                            boolean selectiveAcknowledgePermitted, int senderTime, int echoTime, @NotNull ByteBuffer payload) {
         final IpV4 ipV4Packet = IpV4Factory.createIpV4(stream);
         assertEquals(ipV4Packet.getVersion(), version);
         assertEquals(ipV4Packet.getInternetHeaderLength(), internetHeaderLength);
@@ -154,6 +153,7 @@ public class TcpFactoryTest {
         assertEquals(tcpPacket.isSelectiveAckPermitted(), selectiveAcknowledgePermitted);
         assertEquals(tcpPacket.getTime().getSender(), senderTime);
         assertEquals(tcpPacket.getTime().getEchoReply(), echoTime);
+        assertEquals(tcpPacket.getTcpPayloadStream(), payload);
     }
 
     private void testTcpSynStream() {
@@ -175,7 +175,8 @@ public class TcpFactoryTest {
                 0xc0a8006b, 0x11fd45ce, (short) 0xe03a, (short) 80,
                 1803144045, 0, (byte) 11, false, false, false, false,
                 false, false, false, true, false, (short) 0xffff, (short) 0x92c6, (short) 0,
-                (short) 1460, (byte) 5, true, 690506430, 0);
+                (short) 1460, (byte) 5, true, 690506430, 0,
+                ByteBuffer.allocate(0));
     }
 
     private void testTcpAckStream() {
@@ -195,7 +196,8 @@ public class TcpFactoryTest {
                 0xc0a8006b, 0x11fd45ce, (short) 0xe03a, (short) 80,
                 1803144046, 0xdd5058f8, (byte) 8, false, false, false, false,
                 true, false, false, false, false, (short) 4117, (short) 0x02ed, (short) 0,
-                (short) -1, (byte) -1, false, 690506665, 0xe41ea430);
+                (short) -1, (byte) -1, false, 690506665, 0xe41ea430,
+                ByteBuffer.allocate(0));
     }
 
     private void testTcpDataStream() {
@@ -220,47 +222,12 @@ public class TcpFactoryTest {
                 (byte)0x73, (byte)0x74, (byte)0x64, (byte)0x2d, (byte)0x30, (byte)0x30, (byte)0x30, (byte)0x30,
                 (byte)0x30, (byte)0x31, (byte)0x2f };
 
-        final IpV4 dataTcpIpV4Packet = IpV4Factory.createIpV4(ByteBuffer.wrap(dataPacketStream));
-        assertEquals(dataTcpIpV4Packet.getVersion(), 4);
-        assertEquals(dataTcpIpV4Packet.getInternetHeaderLength(), 5);
-        assertEquals(dataTcpIpV4Packet.getDifferentiatedServiceCodePoint(), 0);
-        assertEquals(dataTcpIpV4Packet.getExplicitCongestionNotification(), 0);
-        assertEquals(dataTcpIpV4Packet.getTotalLength(), 956);
-        assertEquals(dataTcpIpV4Packet.getIdentification(), (short) 0xf596);
-        assertEquals(dataTcpIpV4Packet.isDontFragment(), true);
-        assertEquals(dataTcpIpV4Packet.isMoreFragments(), false);
-        assertEquals(dataTcpIpV4Packet.getFragmentOffset(), 0);
-        assertEquals(dataTcpIpV4Packet.getTimeToLive(), 64);
-        assertEquals(dataTcpIpV4Packet.getProtocol(), 6);
-        assertEquals(dataTcpIpV4Packet.getHeaderChecksum(), (short) 0x28c7);
-        assertEquals(dataTcpIpV4Packet.getSourceAddress(), 0xc0a8006b);
-        assertEquals(dataTcpIpV4Packet.getDestinationAddress(), 0x11fd45ce);
-
-        final Tcp dataTcpPacket = dataTcpIpV4Packet.getTcp();
-
-
-//        final Tcp dataTcpPacket = TcpFactory.createTCP(ByteBuffer.wrap(dataPacketStream));
-
-        assertEquals(dataTcpPacket.getSourcePort(), (short) 57402);
-        assertEquals(dataTcpPacket.getDestinationPort(), 80);
-        assertEquals(dataTcpPacket.getSequenceNumber(), 1803144046);
-        assertEquals(dataTcpPacket.getAcknowledgeNumber(), 0xdd5058f8);
-        assertEquals(dataTcpPacket.getDataOffset(), 8);
-        assertEquals(dataTcpPacket.getNS(), false);
-        assertEquals(dataTcpPacket.getCWR(), false);
-        assertEquals(dataTcpPacket.getECE(), false);
-        assertEquals(dataTcpPacket.getURG(), false);
-        assertEquals(dataTcpPacket.getACK(), true);
-        assertEquals(dataTcpPacket.getPSH(), true);
-        assertEquals(dataTcpPacket.getRST(), false);
-        assertEquals(dataTcpPacket.getSYN(), false);
-        assertEquals(dataTcpPacket.getFIN(), false);
-        assertEquals(dataTcpPacket.getWindowSize(), 4117);
-        assertEquals(dataTcpPacket.getChecksum(), 0x769d);
-        assertEquals(dataTcpPacket.getUrgentPointer(), 0);
-
-        assertEquals(dataTcpPacket.getTime().getSender(), 690506667);
-        assertEquals(dataTcpPacket.getTime().getEchoReply(), 0xe41ea430);
-        assertArrayEquals(dataTcpPacket.getTcpPayloadStream().array(), dataStream);
+        testStream(ByteBuffer.wrap(dataPacketStream), (byte) 4, (byte) 5, (byte) 0, (byte) 0, (short) 956, (short) 0xf596,
+                true, false, (short) 0, (byte)64, (byte) 6, (short) 0x28c7,
+                0xc0a8006b, 0x11fd45ce, (short) 0xe03a, (short) 80,
+                1803144046, 0xdd5058f8, (byte) 8, false, false, false, false,
+                true, true, false, false, false, (short) 4117, (short) 0x769d, (short) 0,
+                (short) -1, (byte) -1, false, 690506667, 0xe41ea430,
+                ByteBuffer.wrap(dataStream));
     }
 }
