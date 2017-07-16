@@ -71,11 +71,11 @@ abstract class TcpBuilder {
         return this;
     }
 
-    @NotNull
-    TcpBuilder applyTcpOption(@NotNull ByteBuffer tcpOptionStream) {
-        this.tcpOptionStream = tcpOptionStream;
-        return this;
-    }
+//    @NotNull
+//    TcpBuilder applyTcpOption(@NotNull ByteBuffer tcpOptionStream) {
+//        this.tcpOptionStream = tcpOptionStream;
+//        return this;
+//    }
 
     @NotNull
     TcpBuilder applyTcpPayload(@NotNull ByteBuffer tcpPayloadStream) {

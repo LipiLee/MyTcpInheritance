@@ -427,7 +427,7 @@ public class Tcp {
         return selectiveAckPermitted;
     }
 
-    public List<SelectiveAck> getSelectiveAcks() {
+    List<SelectiveAck> getSelectiveAcks() {
         return selectiveAcks;
     }
 

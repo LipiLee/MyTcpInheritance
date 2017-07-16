@@ -75,7 +75,7 @@ public class Main {
 
         tcpStream.rewind();
 
-        final Tcp reSynAckTcp = TcpFactory.createTCP(tcpStream);
+//        final Tcp reSynAckTcp = TcpFactory.createTCP(tcpStream);
         TestTcpFactory testSynAckStream = new TestTcpFactory(tcpStream.array(), sourcePort, destinationPort, seq, ack,
                 (byte) 10, NS, CWR, ECE, URG, ACK, PSH, RST, SYN, FIN, windowSize, 0xac8f, urgentPointer);
         testSynAckStream.testResultExceptChecksum("SYN/ACK TEST");
