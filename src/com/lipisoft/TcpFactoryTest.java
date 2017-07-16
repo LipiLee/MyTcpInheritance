@@ -7,7 +7,6 @@ import org.junit.Test;
 
 import java.nio.ByteBuffer;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 public class TcpFactoryTest {
@@ -24,20 +23,20 @@ public class TcpFactoryTest {
         testTcpSynStream();
         testSynAckStream();
         testTcpAckStream();
-//        testTcpDataStream();
+        testTcpDataStream();
     }
 
     private void testSynAckStream() {
-        final byte[] synAckPacketStream = new byte[] {
-                (byte)0x45, (byte)0x00, (byte)0x00, (byte)0x3c, (byte)0x00, (byte)0x00, (byte)0x40, (byte)0x00,
-                (byte)0x2e, (byte)0x06, (byte)0x33, (byte)0xde, (byte)0x11, (byte)0xfd, (byte)0x45, (byte)0xce,
-                (byte)0xc0, (byte)0xa8, (byte)0x00, (byte)0x6b, (byte)0x00, (byte)0x50, (byte)0xe0, (byte)0x3a,
-                (byte)0xdd, (byte)0x50, (byte)0x58, (byte)0xf7, (byte)0x6b, (byte)0x79, (byte)0xcb, (byte)0x6e,
-                (byte)0xa0, (byte)0x12, (byte)0x38, (byte)0x90, (byte)0xac, (byte)0x8f, (byte)0x00, (byte)0x00,
-                (byte)0x02, (byte)0x04, (byte)0x05, (byte)0xb4, (byte)0x04, (byte)0x02, (byte)0x08, (byte)0x0a,
-                (byte)0xe4, (byte)0x1e, (byte)0xa4, (byte)0x30, (byte)0x29, (byte)0x28, (byte)0x4a, (byte)0xbe,
-                (byte)0x01, (byte)0x03, (byte)0x03, (byte)0x08
-        };
+//        final byte[] synAckPacketStream = new byte[] {
+//                (byte)0x45, (byte)0x00, (byte)0x00, (byte)0x3c, (byte)0x00, (byte)0x00, (byte)0x40, (byte)0x00,
+//                (byte)0x2e, (byte)0x06, (byte)0x33, (byte)0xde, (byte)0x11, (byte)0xfd, (byte)0x45, (byte)0xce,
+//                (byte)0xc0, (byte)0xa8, (byte)0x00, (byte)0x6b, (byte)0x00, (byte)0x50, (byte)0xe0, (byte)0x3a,
+//                (byte)0xdd, (byte)0x50, (byte)0x58, (byte)0xf7, (byte)0x6b, (byte)0x79, (byte)0xcb, (byte)0x6e,
+//                (byte)0xa0, (byte)0x12, (byte)0x38, (byte)0x90, (byte)0xac, (byte)0x8f, (byte)0x00, (byte)0x00,
+//                (byte)0x02, (byte)0x04, (byte)0x05, (byte)0xb4, (byte)0x04, (byte)0x02, (byte)0x08, (byte)0x0a,
+//                (byte)0xe4, (byte)0x1e, (byte)0xa4, (byte)0x30, (byte)0x29, (byte)0x28, (byte)0x4a, (byte)0xbe,
+//                (byte)0x01, (byte)0x03, (byte)0x03, (byte)0x08
+//        };
 
         final int sourceAddress = 0x11fd45ce;
         final int destinationAddress = 0xc0a8006b;
@@ -196,7 +195,7 @@ public class TcpFactoryTest {
                 0xc0a8006b, 0x11fd45ce, (short) 0xe03a, (short) 80,
                 1803144046, 0xdd5058f8, (byte) 8, false, false, false, false,
                 true, false, false, false, false, (short) 4117, (short) 0x02ed, (short) 0,
-                (short) -1, (byte) -1, false, 690506665, 0xe41ea430,
+                (short) 0, (byte) 0, false, 690506665, 0xe41ea430,
                 ByteBuffer.allocate(0));
     }
 
@@ -222,12 +221,12 @@ public class TcpFactoryTest {
                 (byte)0x73, (byte)0x74, (byte)0x64, (byte)0x2d, (byte)0x30, (byte)0x30, (byte)0x30, (byte)0x30,
                 (byte)0x30, (byte)0x31, (byte)0x2f };
 
-        testStream(ByteBuffer.wrap(dataPacketStream), (byte) 4, (byte) 5, (byte) 0, (byte) 0, (short) 956, (short) 0xf596,
-                true, false, (short) 0, (byte)64, (byte) 6, (short) 0x28c7,
+        testStream(ByteBuffer.wrap(dataPacketStream), (byte) 4, (byte) 5, (byte) 0, (byte) 0, (short) 956,
+                (short) 0xf596, true, false, (short) 0, (byte)64, (byte) 6, (short) 0x28c7,
                 0xc0a8006b, 0x11fd45ce, (short) 0xe03a, (short) 80,
-                1803144046, 0xdd5058f8, (byte) 8, false, false, false, false,
-                true, true, false, false, false, (short) 4117, (short) 0x769d, (short) 0,
-                (short) -1, (byte) -1, false, 690506667, 0xe41ea430,
-                ByteBuffer.wrap(dataStream));
+                1803144046, 0xdd5058f8, (byte) 8, false, false, false,
+                false, true, true, false, false, false, (short) 4117, (short) 0x769d,
+                (short) 0, (short) 0, (byte) 0, false, 690506667,
+                0xe41ea430, ByteBuffer.wrap(dataStream));
     }
 }
