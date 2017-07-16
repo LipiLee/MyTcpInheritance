@@ -6,6 +6,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
@@ -24,6 +26,32 @@ public class TcpFactoryTest {
         testSynAckStream();
         testTcpAckStream();
         testTcpDataStream();
+        testSelectiveAckStream();
+
+    }
+
+    private void testSelectiveAckStream() {
+        byte[] selectiveAckStream = new byte[] {
+                (byte)0x45, (byte)0x00, (byte)0x00, (byte)0x40, (byte)0xc1, (byte)0x0a, (byte)0x40, (byte)0x00,
+                (byte)0x40, (byte)0x06, (byte)0x25, (byte)0xc0, (byte)0xc0, (byte)0xa8, (byte)0x00, (byte)0x6b,
+                (byte)0x17, (byte)0x21, (byte)0x7b, (byte)0xb9, (byte)0xe0, (byte)0x37, (byte)0x01, (byte)0xbb,
+                (byte)0x3d, (byte)0x73, (byte)0x60, (byte)0x23, (byte)0xe1, (byte)0x46, (byte)0x65, (byte)0xb8,
+                (byte)0xb0, (byte)0x10, (byte)0x10, (byte)0x00, (byte)0x92, (byte)0x36, (byte)0x00, (byte)0x00,
+                (byte)0x01, (byte)0x01, (byte)0x08, (byte)0x0a, (byte)0x29, (byte)0x28, (byte)0x46, (byte)0xa2,
+                (byte)0x06, (byte)0x1c, (byte)0x81, (byte)0x2b, (byte)0x01, (byte)0x01, (byte)0x05, (byte)0x0a,
+                (byte)0xe1, (byte)0x46, (byte)0x64, (byte)0xa1, (byte)0xe1, (byte)0x46, (byte)0x65, (byte)0xb8
+        };
+
+        final List<SelectiveAck> selectiveAcks = new ArrayList<>();
+        final SelectiveAck selectiveAck = new SelectiveAck(0xe14664a1, 0xe14665b8);
+        selectiveAcks.add(selectiveAck);
+        testStream(ByteBuffer.wrap(selectiveAckStream), (byte) 4, (byte) 5, (byte) 0, (byte) 0, (short) 64,
+                (short) 0xc10a, true, false, (short) 0, (byte) 64, (byte) 6, (short) 0x25c0,
+                0xc0a8006b, 0x17217bb9, (short) 57399, (short) 443, 1030971427,
+                0xe14665b8, (byte) 44, false, false, false, false, true,
+                false, false, false, false, (short) 4096, (short) 0x9236, (short) 0, (short) 0,
+                (byte) 0, false, 0x292846a2, 0x061c812b, selectiveAcks,
+                ByteBuffer.allocate(0));
     }
 
     private void testSynAckStream() {
@@ -93,13 +121,15 @@ public class TcpFactoryTest {
         packetStream.put(ip.getStream()).put(tcp.getTcpHeaderStream()).put(tcp.getTcpOptionStream()).put(tcp.getTcpPayloadStream());
         packetStream.rewind();
 
+        final List<SelectiveAck> selectiveAcks = new ArrayList<>();
+
         testStream(packetStream, version, internetHeaderLength, differentiatedServiceCodePoint,
                 explicitCongestionNotification, totalLength, identification,
                 doNotFragment, moreFragment, fragmentOffset, timeToLive, protocol, ip.getHeaderChecksum(),
                 sourceAddress, destinationAddress, sourcePort, destinationPort,
                 sequence, acknowledgement, tcp.getDataOffset(), NS, CWR, ECE, URG,
                 ACK, PSH, RST, SYN, FIN, windowSize, tcp.getChecksum(), urgentPointer,
-                maxSegmentSize, windowScale, selectiveAckPermitted, sender, echoReply, ByteBuffer.allocate(0));
+                maxSegmentSize, windowScale, selectiveAckPermitted, sender, echoReply, selectiveAcks, ByteBuffer.allocate(0));
 
     }
 
@@ -111,7 +141,8 @@ public class TcpFactoryTest {
                             int acknowledgeNumber, byte dataOffset, boolean NS, boolean CWR, boolean ECE, boolean URG,
                             boolean ACK, boolean PSH, boolean RST, boolean SYN, boolean FIN, short windowSize,
                             short checksum, short urgentPointer, short maximumSegmentSize, byte windowScale,
-                            boolean selectiveAcknowledgePermitted, int senderTime, int echoTime, @NotNull ByteBuffer payload) {
+                            boolean selectiveAcknowledgePermitted, int senderTime, int echoTime,
+                            @NotNull List<SelectiveAck> selectiveAcks, @NotNull ByteBuffer payload) {
         final IpV4 ipV4Packet = IpV4Factory.createIpV4(stream);
         assertEquals(ipV4Packet.getVersion(), version);
         assertEquals(ipV4Packet.getInternetHeaderLength(), internetHeaderLength);
@@ -152,6 +183,7 @@ public class TcpFactoryTest {
         assertEquals(tcpPacket.isSelectiveAckPermitted(), selectiveAcknowledgePermitted);
         assertEquals(tcpPacket.getTime().getSender(), senderTime);
         assertEquals(tcpPacket.getTime().getEchoReply(), echoTime);
+        assertEquals(tcpPacket.getSelectiveAcks(), selectiveAcks);
         assertEquals(tcpPacket.getTcpPayloadStream(), payload);
     }
 
@@ -168,13 +200,14 @@ public class TcpFactoryTest {
                 (byte)0x29, (byte)0x28, (byte)0x4a, (byte)0xbe, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00,
                 (byte)0x04, (byte)0x02, (byte)0x00, (byte)0x00 };
 
+        final List<SelectiveAck> selectiveAcks = new ArrayList<>();
 
         testStream(ByteBuffer.wrap(synPacketStream), (byte) 4, (byte) 5, (byte) 0, (byte) 0, (short) 64, (short) 0xb160,
                 true, false, (short) 0, (byte)64, (byte) 6, (short) 0x7079,
                 0xc0a8006b, 0x11fd45ce, (short) 0xe03a, (short) 80,
                 1803144045, 0, (byte) 11, false, false, false, false,
                 false, false, false, true, false, (short) 0xffff, (short) 0x92c6, (short) 0,
-                (short) 1460, (byte) 5, true, 690506430, 0,
+                (short) 1460, (byte) 5, true, 690506430, 0, selectiveAcks,
                 ByteBuffer.allocate(0));
     }
 
@@ -190,13 +223,15 @@ public class TcpFactoryTest {
                 (byte)0x01, (byte)0x08, (byte)0x0a, (byte)0x29, (byte)0x28, (byte)0x4b, (byte)0xa9, (byte)0xe4,
                 (byte)0x1e, (byte)0xa4, (byte)0x30 };
 
+        final List<SelectiveAck> selectiveAcks = new ArrayList<>();
+
         testStream(ByteBuffer.wrap(ackPacketStream), (byte) 4, (byte) 5, (byte) 0, (byte) 0, (short) 52, (short) 0x6fcb,
                 true, false, (short) 0, (byte)64, (byte) 6, (short) 0xb21a,
                 0xc0a8006b, 0x11fd45ce, (short) 0xe03a, (short) 80,
                 1803144046, 0xdd5058f8, (byte) 8, false, false, false, false,
                 true, false, false, false, false, (short) 4117, (short) 0x02ed, (short) 0,
                 (short) 0, (byte) 0, false, 690506665, 0xe41ea430,
-                ByteBuffer.allocate(0));
+                selectiveAcks, ByteBuffer.allocate(0));
     }
 
     private void testTcpDataStream() {
@@ -221,12 +256,14 @@ public class TcpFactoryTest {
                 (byte)0x73, (byte)0x74, (byte)0x64, (byte)0x2d, (byte)0x30, (byte)0x30, (byte)0x30, (byte)0x30,
                 (byte)0x30, (byte)0x31, (byte)0x2f };
 
+        final List<SelectiveAck> selectiveAcks = new ArrayList<>();
+
         testStream(ByteBuffer.wrap(dataPacketStream), (byte) 4, (byte) 5, (byte) 0, (byte) 0, (short) 956,
                 (short) 0xf596, true, false, (short) 0, (byte)64, (byte) 6, (short) 0x28c7,
                 0xc0a8006b, 0x11fd45ce, (short) 0xe03a, (short) 80,
                 1803144046, 0xdd5058f8, (byte) 8, false, false, false,
                 false, true, true, false, false, false, (short) 4117, (short) 0x769d,
                 (short) 0, (short) 0, (byte) 0, false, 690506667,
-                0xe41ea430, ByteBuffer.wrap(dataStream));
+                0xe41ea430, selectiveAcks, ByteBuffer.wrap(dataStream));
     }
 }
