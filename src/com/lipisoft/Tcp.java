@@ -115,8 +115,8 @@ public class Tcp {
             tcpHeaderStream.putShort((short) sourcePort);
             tcpHeaderStream.putShort((short) destinationPort);
 
-            tcpHeaderStream.putInt((int) seq);
-            tcpHeaderStream.putInt((int) ack);
+            tcpHeaderStream.putInt(seq);
+            tcpHeaderStream.putInt(ack);
 
             // temporarily set dataOffset to 0 for occupying its space
             // tcpHeaderStream.put(dataOffset);
@@ -132,7 +132,7 @@ public class Tcp {
                     (FIN ? 1 : 0));
             tcpHeaderStream.put(controlBits);
 
-            tcpHeaderStream.putShort((short) windowSize);
+            tcpHeaderStream.putShort(windowSize);
             tcpHeaderStream.putShort((short) 0); // checksum
 
             // Don't use urgent pointer
@@ -219,7 +219,7 @@ public class Tcp {
             sum = ~sum;
 
             checksum = (short) sum;
-            tcpHeaderStream.putShort(16, (short) checksum);
+            tcpHeaderStream.putShort(16, checksum);
         }
 
         private ByteBuffer createPsuedoIpHeader() {
@@ -238,8 +238,8 @@ public class Tcp {
         private void writeTimeStamp(@NotNull ByteBuffer stream) {
             stream.put((byte) 8);
             stream.put((byte) 10);
-            stream.putInt((int) time.getSender());
-            stream.putInt((int) time.getEchoReply());
+            stream.putInt(time.getSender());
+            stream.putInt(time.getEchoReply());
         }
 
         private void writeSelectiveAcks(@NotNull ByteBuffer stream) {
@@ -247,10 +247,9 @@ public class Tcp {
             stream.put((byte) selectiveAcks.size());
 
             for (SelectiveAck selectiveAck: selectiveAcks) {
-                stream.putInt((int) selectiveAck.getBegin());
-                stream.putInt((int) selectiveAck.getEnd());
+                stream.putInt(selectiveAck.getBegin());
+                stream.putInt(selectiveAck.getEnd());
             }
-
         }
 
         private void writeSelectiveAckPermitted(@NotNull ByteBuffer stream) {
@@ -261,13 +260,13 @@ public class Tcp {
         private void writeWindowScale(@NotNull ByteBuffer stream) {
             stream.put((byte) 3);
             stream.put((byte) 3);
-            stream.put((byte) windowScale);
+            stream.put(windowScale);
         }
 
         private void writeMaxSegementSize(@NotNull ByteBuffer stream) {
             stream.put((byte) 2);
             stream.put((byte) 4);
-            stream.putShort((short) maxSegmentSize);
+            stream.putShort(maxSegmentSize);
         }
 
         private boolean isAssignedMaxSegmentSize() {
