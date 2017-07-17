@@ -7,8 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 abstract class TcpBuilder {
-    int sourcePort;
-    int destinationPort;
+    short sourcePort;
+    short destinationPort;
 
     int seq;
     int ack;
@@ -32,14 +32,14 @@ abstract class TcpBuilder {
     short maxSegmentSize = 0;
     byte windowScale = 0;
     boolean selectiveAckPermitted = false;
-    List<SelectiveAck> selectiveAcks = new ArrayList<>();
-    TimeStamp time = new TimeStamp(0, 0);
+    @NotNull List<SelectiveAck> selectiveAcks = new ArrayList<>();
+    @NotNull TimeStamp time = new TimeStamp(0, 0);
 
     ByteBuffer tcpHeaderStream = null;
-    ByteBuffer tcpOptionStream = ByteBuffer.allocate(0);
-    ByteBuffer tcpPayloadStream = ByteBuffer.allocate(0);
+    @NotNull ByteBuffer tcpOptionStream = ByteBuffer.allocate(0);
+    @NotNull ByteBuffer tcpPayloadStream = ByteBuffer.allocate(0);
 
-    abstract Tcp build();
+    @NotNull abstract Tcp build();
 
     @NotNull
     TcpBuilder applyMaxSegmentSize(short maxSegmentSize) {

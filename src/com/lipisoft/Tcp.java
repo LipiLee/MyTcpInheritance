@@ -10,8 +10,8 @@ public class Tcp {
     private static final int TCP_HEADER_SIZE_BYTES = 20;
     private static final int MAX_TCP_OPTIONS_SIZE_BYTES = 40;
 
-    private final int sourcePort;
-    private final int destinationPort;
+    private final short sourcePort;
+    private final short destinationPort;
 
     private final int sequenceNumber;
     private final int acknowledgeNumber;
@@ -27,8 +27,6 @@ public class Tcp {
     private final boolean SYN;
     private final boolean FIN;
 
-    // The window size is enough 16 bits,
-    // but their type is int, not short because Java can NOT support unsigned int
     private final short windowSize;
     private final short checksum;
     private final short urgentPointer;
@@ -44,7 +42,7 @@ public class Tcp {
     private final ByteBuffer tcpPayloadStream;
 
     static class IncomingTcpBuilder extends TcpBuilder {
-        IncomingTcpBuilder(int sourcePort, int destinationPort, int seq, int ack,
+        IncomingTcpBuilder(short sourcePort, short destinationPort, int seq, int ack,
                                   byte dataOffset, boolean NS, boolean CWR, boolean ECE, boolean URG,
                                   boolean ACK, boolean PSH, boolean RST, boolean SYN, boolean FIN,
                                   short windowSize, short checksum, short urgentPointer) {
@@ -112,8 +110,8 @@ public class Tcp {
 
         private void createTcpHeaderStream() {
             tcpHeaderStream = ByteBuffer.allocate(TCP_HEADER_SIZE_BYTES);
-            tcpHeaderStream.putShort((short) sourcePort);
-            tcpHeaderStream.putShort((short) destinationPort);
+            tcpHeaderStream.putShort(sourcePort);
+            tcpHeaderStream.putShort(destinationPort);
 
             tcpHeaderStream.putInt(seq);
             tcpHeaderStream.putInt(ack);
@@ -174,6 +172,7 @@ public class Tcp {
             tcpOptionStream = ByteBuffer.allocate(size);
             buffer.flip();
             tcpOptionStream.put(buffer);
+            tcpOptionStream.rewind();
         }
 
         private void setDataOffset() {
@@ -181,10 +180,6 @@ public class Tcp {
             dataOffset = (byte) ((TCP_HEADER_SIZE_BYTES + optionsLength) / 4);
             final byte dataOffsetAndNs = (byte) (dataOffset << 4 + (NS ? 1 : 0));
             tcpHeaderStream.put(12, dataOffsetAndNs);
-
-            // set limit and rewind
-            tcpOptionStream.flip();
-
         }
 
         private void setChecksum() {
@@ -327,7 +322,7 @@ public class Tcp {
         this.tcpPayloadStream = builder.tcpPayloadStream;
     }
 
-    @Override
+    @Override @NotNull
     public String toString() {
         StringBuilder sb = new StringBuilder();
 
@@ -347,11 +342,11 @@ public class Tcp {
         return sb.toString();
     }
 
-    int getSourcePort() {
+    short getSourcePort() {
         return sourcePort;
     }
 
-    int getDestinationPort() {
+    short getDestinationPort() {
         return destinationPort;
     }
 
@@ -427,10 +422,12 @@ public class Tcp {
         return selectiveAckPermitted;
     }
 
+    @NotNull
     List<SelectiveAck> getSelectiveAcks() {
         return selectiveAcks;
     }
 
+    @NotNull
     TimeStamp getTime() {
         return time;
     }
