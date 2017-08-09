@@ -42,16 +42,59 @@ public class TcpFactoryTest {
                 (byte)0xe1, (byte)0x46, (byte)0x64, (byte)0xa1, (byte)0xe1, (byte)0x46, (byte)0x65, (byte)0xb8
         };
 
+        final byte version = 4;
+        final byte internetHeaderLength = 5;
+        final byte differentiatedServiceCodePoint = 0;
+        final byte explicitCongestionNotification = 0;
+        final short totalLength = 64;
+        final short identification = (short) 0xc10a;
+        final boolean doNotFragment = true;
+        final boolean moreFragment = false;
+        final short fragmentOffset = 0;
+        final byte timeToLive = 64;
+        final byte protocol = 6;
+        final short headerChecksum = 0x25c0;
+        final int sourceAddress = 0xc0a8006b;
+        final int destinationAddress = 0x17217bb9;
+
+        final IpTest ip = new IpTest(version, internetHeaderLength, differentiatedServiceCodePoint,
+                explicitCongestionNotification, totalLength, identification, doNotFragment, moreFragment, fragmentOffset,
+                timeToLive, protocol, headerChecksum, sourceAddress, destinationAddress);
+
+        final short sourcePort = (short) 57399;
+        final short destinationPort = 443;
+        final int sequence = 1030971427;
+        final int acknowledgement = 0xe14665b8;
+        final byte dataOffset = 11;
+        final boolean NS = false;
+        final boolean CWR = false;
+        final boolean ECE = false;
+        final boolean URG = false;
+        final boolean ACK = true;
+        final boolean PSH = false;
+        final boolean RST = false;
+        final boolean SYN = false;
+        final boolean FIN = false;
+        final short windowSize = 4096;
+        final short checksum = (short) 0x9236;
+        final short urgentPointer = 0;
+
+        final short maxSegmentSize = 0;
+        final byte windowScale = 0;
+        final boolean selectiveAckPermitted = false;
+        final int sender = 0x292846a2;
+        final int echoReply = 0x061c812b;
         final List<SelectiveAck> selectiveAcks = new ArrayList<>();
         final SelectiveAck selectiveAck = new SelectiveAck(0xe14664a1, 0xe14665b8);
         selectiveAcks.add(selectiveAck);
-        testStream(ByteBuffer.wrap(selectiveAckStream), (byte) 4, (byte) 5, (byte) 0, (byte) 0, (short) 64,
-                (short) 0xc10a, true, false, (short) 0, (byte) 64, (byte) 6, (short) 0x25c0,
-                0xc0a8006b, 0x17217bb9, (short) 57399, (short) 443, 1030971427,
-                0xe14665b8, (byte) 44, false, false, false, false, true,
-                false, false, false, false, (short) 4096, (short) 0x9236, (short) 0, (short) 0,
-                (byte) 0, false, 0x292846a2, 0x061c812b, selectiveAcks,
-                ByteBuffer.allocate(0));
+        final ByteBuffer payload = ByteBuffer.allocate(0);
+
+        final TcpTest tcp = new TcpTest(sourcePort, destinationPort, sequence, acknowledgement, dataOffset, NS, CWR,
+                ECE, URG, ACK, PSH, RST, SYN, FIN, windowSize, checksum, urgentPointer, maxSegmentSize, windowScale,
+                selectiveAckPermitted, sender, echoReply, selectiveAcks, payload);
+
+
+        testStream(ByteBuffer.wrap(selectiveAckStream), ip, tcp);
     }
 
     private void testSynAckStream() {
@@ -121,70 +164,83 @@ public class TcpFactoryTest {
         packetStream.put(ip.getStream()).put(tcp.getTcpHeaderStream()).put(tcp.getTcpOptionStream()).put(tcp.getTcpPayloadStream());
         packetStream.rewind();
 
+        final short headerChecksum = ip.getHeaderChecksum();
+
         final List<SelectiveAck> selectiveAcks = new ArrayList<>();
 
-        testStream(packetStream, version, internetHeaderLength, differentiatedServiceCodePoint,
-                explicitCongestionNotification, totalLength, identification,
-                doNotFragment, moreFragment, fragmentOffset, timeToLive, protocol, ip.getHeaderChecksum(),
-                sourceAddress, destinationAddress, sourcePort, destinationPort,
-                sequence, acknowledgement, tcp.getDataOffset(), NS, CWR, ECE, URG,
-                ACK, PSH, RST, SYN, FIN, windowSize, tcp.getChecksum(), urgentPointer,
-                maxSegmentSize, windowScale, selectiveAckPermitted, sender, echoReply, selectiveAcks, ByteBuffer.allocate(0));
+        final IpTest ipTest = new IpTest(version, internetHeaderLength, differentiatedServiceCodePoint,
+                explicitCongestionNotification, totalLength, identification, doNotFragment, moreFragment, fragmentOffset,
+                timeToLive, protocol, headerChecksum, sourceAddress, destinationAddress);
+
+        final byte dataOffset = tcp.getDataOffset();
+        final short checksum = tcp.getChecksum();
+        final TcpTest tcpTest = new TcpTest(sourcePort, destinationPort, sequence, acknowledgement, dataOffset, NS, CWR,
+                ECE, URG, ACK, PSH, RST, SYN, FIN, windowSize, checksum, urgentPointer, maxSegmentSize, windowScale,
+                selectiveAckPermitted, sender, echoReply, selectiveAcks, ByteBuffer.allocate(0));
+
+        testStream(packetStream, ipTest, tcpTest);
 
     }
 
-    private void testStream(@NotNull ByteBuffer stream, byte version, byte internetHeaderLength,
-                            byte differentiatedServiceCodePoint, byte explicitCongestionNotification, short totalLength,
-                            short identification, boolean doNotFragment, boolean moreFragment, short fragmentOffset,
-                            byte timeToLive, byte protocol, short headerChecksum, int sourceAddress,
-                            int destinationAddress, short sourcePort, short destinationPort, int sequenceNumber,
-                            int acknowledgeNumber, byte dataOffset, boolean NS, boolean CWR, boolean ECE, boolean URG,
-                            boolean ACK, boolean PSH, boolean RST, boolean SYN, boolean FIN, short windowSize,
-                            short checksum, short urgentPointer, short maximumSegmentSize, byte windowScale,
-                            boolean selectiveAcknowledgePermitted, int senderTime, int echoTime,
-                            @NotNull List<SelectiveAck> selectiveAcks, @NotNull ByteBuffer payload) {
+    private void testStream(@NotNull ByteBuffer stream, @NotNull IpTest ip, @NotNull TcpTest tcp) {
         final IpV4 ipV4Packet = IpV4Factory.createIpV4(stream);
-        assertEquals(ipV4Packet.getVersion(), version);
-        assertEquals(ipV4Packet.getInternetHeaderLength(), internetHeaderLength);
-        assertEquals(ipV4Packet.getDifferentiatedServiceCodePoint(), differentiatedServiceCodePoint);
-        assertEquals(ipV4Packet.getExplicitCongestionNotification(), explicitCongestionNotification);
-        assertEquals(ipV4Packet.getTotalLength(), totalLength);
-        assertEquals(ipV4Packet.getIdentification(), identification);
-        assertEquals(ipV4Packet.isDontFragment(), doNotFragment);
-        assertEquals(ipV4Packet.isMoreFragments(), moreFragment);
-        assertEquals(ipV4Packet.getFragmentOffset(), fragmentOffset);
-        assertEquals(ipV4Packet.getTimeToLive(), timeToLive);
-        assertEquals(ipV4Packet.getProtocol(), protocol);
-        assertEquals(ipV4Packet.getHeaderChecksum(), headerChecksum);
-        assertEquals(ipV4Packet.getSourceAddress(), sourceAddress);
-        assertEquals(ipV4Packet.getDestinationAddress(), destinationAddress);
+
+        assertEquals(ipV4Packet.getVersion(), ip.getVersion());
+        assertEquals(ipV4Packet.getInternetHeaderLength(), ip.getInternetHeaderLength());
+        assertEquals(ipV4Packet.getDifferentiatedServiceCodePoint(), ip.getDifferentiatedServiceCodePoint());
+        assertEquals(ipV4Packet.getExplicitCongestionNotification(), ip.getExplicitCongestionNotification());
+        assertEquals(ipV4Packet.getTotalLength(), ip.getTotalLength());
+        assertEquals(ipV4Packet.getIdentification(), ip.getIdentification());
+        assertEquals(ipV4Packet.isDontFragment(), ip.isDoNotFragment());
+        assertEquals(ipV4Packet.isMoreFragments(), ip.isMoreFragment());
+        assertEquals(ipV4Packet.getFragmentOffset(), ip.getFragmentOffset());
+        assertEquals(ipV4Packet.getTimeToLive(), ip.getTimeToLive());
+        assertEquals(ipV4Packet.getProtocol(), ip.getProtocol());
+        assertEquals(ipV4Packet.getHeaderChecksum(), ip.getHeaderChecksum());
+        assertEquals(ipV4Packet.getSourceAddress(), ip.getSourceAddress());
+        assertEquals(ipV4Packet.getDestinationAddress(), ip.getDestinationAddress());
 
         final Tcp tcpPacket = ipV4Packet.getTcp();
-        assertEquals(tcpPacket.getSourcePort(), sourcePort);
-        assertEquals(tcpPacket.getDestinationPort(), destinationPort);
-        assertEquals(tcpPacket.getSequenceNumber(), sequenceNumber);
-        assertEquals(tcpPacket.getAcknowledgeNumber(), acknowledgeNumber);
-        assertEquals(tcpPacket.getDataOffset(), dataOffset);
-        assertEquals(tcpPacket.getNS(), NS);
-        assertEquals(tcpPacket.getCWR(), CWR);
-        assertEquals(tcpPacket.getECE(), ECE);
-        assertEquals(tcpPacket.getURG(), URG);
-        assertEquals(tcpPacket.getACK(), ACK);
-        assertEquals(tcpPacket.getPSH(), PSH);
-        assertEquals(tcpPacket.getRST(), RST);
-        assertEquals(tcpPacket.getSYN(), SYN);
-        assertEquals(tcpPacket.getFIN(), FIN);
-        assertEquals(tcpPacket.getWindowSize(), windowSize);
-        assertEquals(tcpPacket.getChecksum(), checksum);
-        assertEquals(tcpPacket.getUrgentPointer(), urgentPointer);
+        assertEquals(tcpPacket.getSourcePort(), tcp.getSourcePort());
+        assertEquals(tcpPacket.getDestinationPort(), tcp.getDestinationPort());
+        assertEquals(tcpPacket.getSequenceNumber(), tcp.getSequenceNumber());
+        assertEquals(tcpPacket.getAcknowledgeNumber(), tcp.getAcknowledgeNumber());
+        assertEquals(tcpPacket.getDataOffset(), tcp.getDataOffset());
+        assertEquals(tcpPacket.getNS(), tcp.isNS());
+        assertEquals(tcpPacket.getCWR(), tcp.isCWR());
+        assertEquals(tcpPacket.getECE(), tcp.isECE());
+        assertEquals(tcpPacket.getURG(), tcp.isURG());
+        assertEquals(tcpPacket.getACK(), tcp.isACK());
+        assertEquals(tcpPacket.getPSH(), tcp.isPSH());
+        assertEquals(tcpPacket.getRST(), tcp.isRST());
+        assertEquals(tcpPacket.getSYN(), tcp.isSYN());
+        assertEquals(tcpPacket.getFIN(), tcp.isFIN());
+        assertEquals(tcpPacket.getWindowSize(), tcp.getWindowSize());
+        assertEquals(tcpPacket.getChecksum(), tcp.getChecksum());
+        assertEquals(tcpPacket.getUrgentPointer(), tcp.getUrgentPointer());
 
-        assertEquals(tcpPacket.getMaxSegmentSize(), maximumSegmentSize);
-        assertEquals(tcpPacket.getWindowScale(), windowScale);
-        assertEquals(tcpPacket.isSelectiveAckPermitted(), selectiveAcknowledgePermitted);
-        assertEquals(tcpPacket.getTime().getSender(), senderTime);
-        assertEquals(tcpPacket.getTime().getEchoReply(), echoTime);
-        assertEquals(tcpPacket.getSelectiveAcks(), selectiveAcks);
-        assertEquals(tcpPacket.getTcpPayloadStream(), payload);
+        assertEquals(tcpPacket.getMaxSegmentSize(), tcp.getMaximumSegmentSize());
+        assertEquals(tcpPacket.getWindowScale(), tcp.getWindowScale());
+        assertEquals(tcpPacket.isSelectiveAckPermitted(), tcp.isSelectiveAcknowledgePermitted());
+        assertEquals(tcpPacket.getTime().getSender(), tcp.getSenderTime());
+        assertEquals(tcpPacket.getTime().getEchoReply(), tcp.getEchoTime());
+//        assertThat(tcpPacket.getSelectiveAcks(), tcp.getSelectiveAcks());
+        assertEqualsList(tcpPacket.getSelectiveAcks(), tcp.getSelectiveAcks());
+        assertEquals(tcpPacket.getTcpPayloadStream(), tcp.getPayload());
+    }
+
+    private void assertEqualsList(@NotNull List<SelectiveAck> expected, @NotNull List<SelectiveAck> actual) {
+here:   for (SelectiveAck expectedOne : expected) {
+            final int begin = expectedOne.getBegin();
+            final int end = expectedOne.getEnd();
+
+            for (SelectiveAck actualOne : actual) {
+                if (begin == actualOne.getBegin() && end == actualOne.getEnd()) {
+                    continue here;
+                }
+            }
+            assertEquals(expected, actual);
+        }
     }
 
     private void testTcpSynStream() {
@@ -200,15 +256,56 @@ public class TcpFactoryTest {
                 (byte)0x29, (byte)0x28, (byte)0x4a, (byte)0xbe, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00,
                 (byte)0x04, (byte)0x02, (byte)0x00, (byte)0x00 };
 
-        final List<SelectiveAck> selectiveAcks = new ArrayList<>();
+        final byte version = 4;
+        final byte internetHeaderLength = 5;
+        final byte differentiatedServiceCodePoint = 0;
+        final byte explicitCongestionNotification = 0;
+        final short totalLength = 64;
+        final short identification = (short) 0xb160;
+        final boolean doNotFragment = true;
+        final boolean moreFragment = false;
+        final short fragmentOffset = 0;
+        final byte timeToLive = 64;
+        final byte protocol = 6;
+        final short headerChecksum = 0x7079;
+        final int sourceAddress = 0xc0a8006b;
+        final int destinationAddress = 0x11fd45ce;
 
-        testStream(ByteBuffer.wrap(synPacketStream), (byte) 4, (byte) 5, (byte) 0, (byte) 0, (short) 64, (short) 0xb160,
-                true, false, (short) 0, (byte)64, (byte) 6, (short) 0x7079,
-                0xc0a8006b, 0x11fd45ce, (short) 0xe03a, (short) 80,
-                1803144045, 0, (byte) 11, false, false, false, false,
-                false, false, false, true, false, (short) 0xffff, (short) 0x92c6, (short) 0,
-                (short) 1460, (byte) 5, true, 690506430, 0, selectiveAcks,
-                ByteBuffer.allocate(0));
+        final IpTest ip = new IpTest(version, internetHeaderLength, differentiatedServiceCodePoint,
+                explicitCongestionNotification, totalLength, identification, doNotFragment, moreFragment, fragmentOffset,
+                timeToLive, protocol, headerChecksum, sourceAddress, destinationAddress);
+
+        final short sourcePort = (short) 0xe03a;
+        final short destinationPort = 80;
+        final int sequence = 1803144045;
+        final int acknowledgement = 0;
+        final byte dataOffset = 11;
+        final boolean NS = false;
+        final boolean CWR = false;
+        final boolean ECE = false;
+        final boolean URG = false;
+        final boolean ACK = false;
+        final boolean PSH = false;
+        final boolean RST = false;
+        final boolean SYN = true;
+        final boolean FIN = false;
+        final short windowSize = (short) 0xffff;
+        final short checksum = (short) 0x92c6;
+        final short urgentPointer = 0;
+
+        final short maxSegmentSize = 1460;
+        final byte windowScale = 5;
+        final boolean selectiveAckPermitted = true;
+        final int sender = 690506430;
+        final int echoReply = 0;
+        final List<SelectiveAck> selectiveAcks = new ArrayList<>();
+        final ByteBuffer payload = ByteBuffer.allocate(0);
+
+        final TcpTest tcp = new TcpTest(sourcePort, destinationPort, sequence, acknowledgement, dataOffset, NS, CWR,
+                ECE, URG, ACK, PSH, RST, SYN, FIN, windowSize, checksum, urgentPointer, maxSegmentSize, windowScale,
+                selectiveAckPermitted, sender, echoReply, selectiveAcks, payload);
+
+        testStream(ByteBuffer.wrap(synPacketStream), ip, tcp);
     }
 
     private void testTcpAckStream() {
@@ -223,15 +320,56 @@ public class TcpFactoryTest {
                 (byte)0x01, (byte)0x08, (byte)0x0a, (byte)0x29, (byte)0x28, (byte)0x4b, (byte)0xa9, (byte)0xe4,
                 (byte)0x1e, (byte)0xa4, (byte)0x30 };
 
-        final List<SelectiveAck> selectiveAcks = new ArrayList<>();
+        final byte version = 4;
+        final byte internetHeaderLength = 5;
+        final byte differentiatedServiceCodePoint = 0;
+        final byte explicitCongestionNotification = 0;
+        final short totalLength = 52;
+        final short identification = (short) 0x6fcb;
+        final boolean doNotFragment = true;
+        final boolean moreFragment = false;
+        final short fragmentOffset = 0;
+        final byte timeToLive = 64;
+        final byte protocol = 6;
+        final short headerChecksum = (short) 0xb21a;
+        final int sourceAddress = 0xc0a8006b;
+        final int destinationAddress = 0x11fd45ce;
 
-        testStream(ByteBuffer.wrap(ackPacketStream), (byte) 4, (byte) 5, (byte) 0, (byte) 0, (short) 52, (short) 0x6fcb,
-                true, false, (short) 0, (byte)64, (byte) 6, (short) 0xb21a,
-                0xc0a8006b, 0x11fd45ce, (short) 0xe03a, (short) 80,
-                1803144046, 0xdd5058f8, (byte) 8, false, false, false, false,
-                true, false, false, false, false, (short) 4117, (short) 0x02ed, (short) 0,
-                (short) 0, (byte) 0, false, 690506665, 0xe41ea430,
-                selectiveAcks, ByteBuffer.allocate(0));
+        final IpTest ip = new IpTest(version, internetHeaderLength, differentiatedServiceCodePoint,
+                explicitCongestionNotification, totalLength, identification, doNotFragment, moreFragment, fragmentOffset,
+                timeToLive, protocol, headerChecksum, sourceAddress, destinationAddress);
+
+        final short sourcePort = (short) 0xe03a;
+        final short destinationPort = 80;
+        final int sequence = 1803144046;
+        final int acknowledgement = 0xdd5058f8;
+        final byte dataOffset = 8;
+        final boolean NS = false;
+        final boolean CWR = false;
+        final boolean ECE = false;
+        final boolean URG = false;
+        final boolean ACK = true;
+        final boolean PSH = false;
+        final boolean RST = false;
+        final boolean SYN = false;
+        final boolean FIN = false;
+        final short windowSize = 4117;
+        final short checksum = 0x2ed;
+        final short urgentPointer = 0;
+
+        final short maxSegmentSize = 0;
+        final byte windowScale = 0;
+        final boolean selectiveAckPermitted = false;
+        final int sender = 690506665;
+        final int echoReply = 0xe41ea430;
+        final List<SelectiveAck> selectiveAcks = new ArrayList<>();
+        final ByteBuffer payload = ByteBuffer.allocate(0);
+
+        final TcpTest tcp = new TcpTest(sourcePort, destinationPort, sequence, acknowledgement, dataOffset, NS, CWR,
+                ECE, URG, ACK, PSH, RST, SYN, FIN, windowSize, checksum, urgentPointer, maxSegmentSize, windowScale,
+                selectiveAckPermitted, sender, echoReply, selectiveAcks, payload);
+
+        testStream(ByteBuffer.wrap(ackPacketStream), ip, tcp);
     }
 
     private void testTcpDataStream() {
@@ -256,14 +394,55 @@ public class TcpFactoryTest {
                 (byte)0x73, (byte)0x74, (byte)0x64, (byte)0x2d, (byte)0x30, (byte)0x30, (byte)0x30, (byte)0x30,
                 (byte)0x30, (byte)0x31, (byte)0x2f };
 
-        final List<SelectiveAck> selectiveAcks = new ArrayList<>();
+        final byte version = 4;
+        final byte internetHeaderLength = 5;
+        final byte differentiatedServiceCodePoint = 0;
+        final byte explicitCongestionNotification = 0;
+        final short totalLength = 956;
+        final short identification = (short) 0xf596;
+        final boolean doNotFragment = true;
+        final boolean moreFragment = false;
+        final short fragmentOffset = 0;
+        final byte timeToLive = 64;
+        final byte protocol = 6;
+        final short headerChecksum = (short) 0x28c7;
+        final int sourceAddress = 0xc0a8006b;
+        final int destinationAddress = 0x11fd45ce;
 
-        testStream(ByteBuffer.wrap(dataPacketStream), (byte) 4, (byte) 5, (byte) 0, (byte) 0, (short) 956,
-                (short) 0xf596, true, false, (short) 0, (byte)64, (byte) 6, (short) 0x28c7,
-                0xc0a8006b, 0x11fd45ce, (short) 0xe03a, (short) 80,
-                1803144046, 0xdd5058f8, (byte) 8, false, false, false,
-                false, true, true, false, false, false, (short) 4117, (short) 0x769d,
-                (short) 0, (short) 0, (byte) 0, false, 690506667,
-                0xe41ea430, selectiveAcks, ByteBuffer.wrap(dataStream));
+        final IpTest ip = new IpTest(version, internetHeaderLength, differentiatedServiceCodePoint,
+                explicitCongestionNotification, totalLength, identification, doNotFragment, moreFragment, fragmentOffset,
+                timeToLive, protocol, headerChecksum, sourceAddress, destinationAddress);
+
+        final short sourcePort = (short) 0xe03a;
+        final short destinationPort = 80;
+        final int sequence = 1803144046;
+        final int acknowledgement = 0xdd5058f8;
+        final byte dataOffset = 8;
+        final boolean NS = false;
+        final boolean CWR = false;
+        final boolean ECE = false;
+        final boolean URG = false;
+        final boolean ACK = true;
+        final boolean PSH = true;
+        final boolean RST = false;
+        final boolean SYN = false;
+        final boolean FIN = false;
+        final short windowSize = 4117;
+        final short checksum = 0x769d;
+        final short urgentPointer = 0;
+
+        final short maxSegmentSize = 0;
+        final byte windowScale = 0;
+        final boolean selectiveAckPermitted = false;
+        final int sender = 690506667;
+        final int echoReply = 0xe41ea430;
+        final List<SelectiveAck> selectiveAcks = new ArrayList<>();
+        final ByteBuffer payload = ByteBuffer.wrap(dataStream);
+
+        final TcpTest tcp = new TcpTest(sourcePort, destinationPort, sequence, acknowledgement, dataOffset, NS, CWR,
+                ECE, URG, ACK, PSH, RST, SYN, FIN, windowSize, checksum, urgentPointer, maxSegmentSize, windowScale,
+                selectiveAckPermitted, sender, echoReply, selectiveAcks, payload);
+
+        testStream(ByteBuffer.wrap(dataPacketStream), ip, tcp);
     }
 }
