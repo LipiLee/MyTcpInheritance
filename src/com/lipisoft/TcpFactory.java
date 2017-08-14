@@ -24,7 +24,7 @@ class TcpFactory {
         final byte dataOffsetAndNs = packet.get();
 
         final byte dataOffset = (byte) (((dataOffsetAndNs & 0xF0) >>> 4));
-        if (dataOffset < 5 && dataOffset > 15) {
+        if (dataOffset < 5) {
             throw new RuntimeException("DataOffset is invalid in TCP. Packet is corrupted");
         }
 
