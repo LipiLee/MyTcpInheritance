@@ -1,10 +1,11 @@
-package com.lipisoft;
+package com.lipisoft.ip;
 
+import com.lipisoft.tcp.Tcp;
 import com.sun.istack.internal.NotNull;
 
 import java.nio.ByteBuffer;
 
-class IpV4 {
+public class IpV4 {
     static final int IPV4_HEADER_SIZE = 20;
 
     private final byte version;
@@ -64,8 +65,8 @@ class IpV4 {
         }
     }
 
-    static class OutGoingIpV4Builder extends IpV4Builder {
-        OutGoingIpV4Builder(final byte version,
+    public static class OutGoingIpV4Builder extends IpV4Builder {
+        public OutGoingIpV4Builder(final byte version,
                             final byte internetHeaderLength,
                             final byte differentiatedServiceCodePoint,
                             final byte explicitCongestionNotification,
@@ -150,7 +151,7 @@ class IpV4 {
             return tcpSize;
         }
 
-        IpV4 build() {
+        @NotNull public IpV4 build() {
             totalLength = (short) (IPV4_HEADER_SIZE + tcpSize());
             makeIpStream();
             setChecksum();
@@ -177,67 +178,67 @@ class IpV4 {
         this.tcp = builder.tcp;
     }
 
-    byte getVersion() {
+    public byte getVersion() {
         return version;
     }
 
-    byte getInternetHeaderLength() {
+    public byte getInternetHeaderLength() {
         return internetHeaderLength;
     }
 
-    byte getDifferentiatedServiceCodePoint() {
+    public byte getDifferentiatedServiceCodePoint() {
         return differentiatedServiceCodePoint;
     }
 
-    byte getExplicitCongestionNotification() {
+    public byte getExplicitCongestionNotification() {
         return explicitCongestionNotification;
     }
 
-    short getTotalLength() {
+    public short getTotalLength() {
         return totalLength;
     }
 
-    short getIdentification() {
+    public short getIdentification() {
         return identification;
     }
 
-    boolean isDontFragment() {
+    public boolean isDontFragment() {
         return dontFragment;
     }
 
-    boolean isMoreFragments() {
+    public boolean isMoreFragments() {
         return moreFragments;
     }
 
-    short getFragmentOffset() {
+    public short getFragmentOffset() {
         return fragmentOffset;
     }
 
-    byte getTimeToLive() {
+    public byte getTimeToLive() {
         return timeToLive;
     }
 
-    byte getProtocol() {
+    public byte getProtocol() {
         return protocol;
     }
 
-    short getHeaderChecksum() {
+    public short getHeaderChecksum() {
         return headerChecksum;
     }
 
-    int getSourceAddress() {
+    public int getSourceAddress() {
         return sourceAddress;
     }
 
-    int getDestinationAddress() {
+    public int getDestinationAddress() {
         return destinationAddress;
     }
 
-    ByteBuffer getStream() {
+    @NotNull public ByteBuffer getStream() {
         return stream;
     }
 
-    Tcp getTcp() {
+    @NotNull public Tcp getTcp() {
         return tcp;
     }
 }

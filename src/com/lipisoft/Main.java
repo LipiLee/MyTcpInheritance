@@ -1,5 +1,11 @@
 package com.lipisoft;
 
+import com.lipisoft.tcp.ControlFlags;
+import com.lipisoft.tcp.Port;
+import com.lipisoft.tcp.Tcp;
+import com.lipisoft.tcp.TimeStamp;
+import com.lipisoft.tcp.Number;
+
 import java.nio.ByteBuffer;
 
 public class Main {
@@ -8,8 +14,10 @@ public class Main {
         final int destinationAddress = 0xc0a8006b;
         final short sourcePort = 80;
         final short destinationPort = (short) 0xe03a;
+        final Port port = new Port(sourcePort, destinationPort);
         final int seq = 0xdd5058f7;
         final int ack = 1803144046;
+        final Number number = new Number(seq, ack);
         final boolean NS = false;
         final boolean CWR = false;
         final boolean ECE = false;
@@ -19,6 +27,7 @@ public class Main {
         final boolean RST = false;
         final boolean SYN = true;
         final boolean FIN = false;
+        final ControlFlags controlFlags = new ControlFlags(NS, CWR, ECE, URG, ACK, PSH, RST, SYN, FIN);
 
         final short windowSize = 14480;
         final short urgentPointer = 0;
@@ -28,13 +37,20 @@ public class Main {
         final TimeStamp timeStamp = new TimeStamp(0xe41ea430, 690506430);
         final byte windowScale = 8;
 
-        final Tcp synAckTcp = new Tcp.OutgoingTcpBuilder(sourceAddress, destinationAddress, sourcePort, destinationPort,
-                seq, ack, NS, CWR, ECE, URG, ACK, PSH, RST, SYN, FIN, windowSize, urgentPointer)
-                .applyMaxSegmentSize(maxSegmentSize)
-                .applyWindowScale(windowScale)
-                .applySelectiveAckPermitted(selectiveAckPermitted)
-                .applyTimeStamp(timeStamp)
-                .build();
+//        final Tcp synAckTcp = new Tcp.OutgoingTcpBuilder(sourceAddress, destinationAddress, port,
+//                number, controlFlags, windowSize, urgentPointer)
+//                .applyMaxSegmentSize(maxSegmentSize)
+//                .applyWindowScale(windowScale)
+//                .applySelectiveAckPermitted(selectiveAckPermitted)
+//                .applyTimeStamp(timeStamp)
+//                .build();
+        final Tcp.OutgoingTcpBuilder builder = new Tcp.OutgoingTcpBuilder(sourceAddress, destinationAddress, port,
+                number, controlFlags, windowSize, urgentPointer);
+        builder.applyMaxSegmentSize(maxSegmentSize);
+        builder.applyWindowScale(windowScale);
+        builder.applySelectiveAckPermitted(selectiveAckPermitted);
+        builder.applyTimeStamp(timeStamp);
+        final Tcp synAckTcp = builder.build();
 
         final ByteBuffer synAckTcpHeaderStream = synAckTcp.getTcpHeaderStream();
         final ByteBuffer synAckTcpOptionsStream = synAckTcp.getTcpOptionStream();

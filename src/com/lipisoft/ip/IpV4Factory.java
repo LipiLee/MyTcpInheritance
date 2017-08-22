@@ -1,12 +1,13 @@
-package com.lipisoft;
+package com.lipisoft.ip;
 
+import com.lipisoft.tcp.Tcp;
+import com.lipisoft.tcp.TcpFactory;
 import com.sun.istack.internal.NotNull;
 
 import java.nio.ByteBuffer;
 
-class IpV4Factory {
-    @NotNull
-    static IpV4 createIpV4(@NotNull ByteBuffer stream) {
+public class IpV4Factory {
+    @NotNull public static IpV4 createIpV4(@NotNull ByteBuffer stream) {
         final byte versionAndiHL = stream.get();
         final byte version = (byte) ((versionAndiHL & 0xf0) >> 4);
         final byte internetHeaderLength = (byte) (versionAndiHL & 0x0f);
@@ -28,7 +29,7 @@ class IpV4Factory {
         final Tcp tcp = TcpFactory.createTCP(stream);
         final ByteBuffer ipStream = ByteBuffer.allocate(IpV4.IPV4_HEADER_SIZE);
         stream.rewind();
-        ipStream.put(stream.array(), 0, 20);
+        ipStream.put(stream.array(), 0, IpV4.IPV4_HEADER_SIZE);
 
         return new IpV4.IncomingIpV4Builder(version, internetHeaderLength, differentiatedServiceCodePoint,
                 explicitCongestionNotification, totalLength, identification, doNotFragment, moreFragments, fragmentOffset,

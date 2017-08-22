@@ -1,6 +1,6 @@
 package com.lipisoft;
 
-public class IpTest {
+class IpTest {
     private final byte version;
     private final byte internetHeaderLength;
     private final byte differentiatedServiceCodePoint;
@@ -16,7 +16,7 @@ public class IpTest {
     private final int sourceAddress;
     private final int destinationAddress;
 
-    public IpTest(byte version, byte internetHeaderLength, byte differentiatedServiceCodePoint,
+    IpTest(byte version, byte internetHeaderLength, byte differentiatedServiceCodePoint,
                   byte explicitCongestionNotification, short totalLength, short identification, boolean doNotFragment,
                   boolean moreFragment, short fragmentOffset, byte timeToLive, byte protocol, short headerChecksum,
                   int sourceAddress, int destinationAddress) {
@@ -36,59 +36,59 @@ public class IpTest {
         this.destinationAddress = destinationAddress;
     }
 
-    public byte getVersion() {
+    byte getVersion() {
         return version;
     }
 
-    public byte getInternetHeaderLength() {
+    byte getInternetHeaderLength() {
         return internetHeaderLength;
     }
 
-    public byte getDifferentiatedServiceCodePoint() {
+    byte getDifferentiatedServiceCodePoint() {
         return differentiatedServiceCodePoint;
     }
 
-    public byte getExplicitCongestionNotification() {
+    byte getExplicitCongestionNotification() {
         return explicitCongestionNotification;
     }
 
-    public short getTotalLength() {
+    short getTotalLength() {
         return totalLength;
     }
 
-    public short getIdentification() {
+    short getIdentification() {
         return identification;
     }
 
-    public boolean isDoNotFragment() {
+    boolean isDoNotFragment() {
         return doNotFragment;
     }
 
-    public boolean isMoreFragment() {
+    boolean isMoreFragment() {
         return moreFragment;
     }
 
-    public short getFragmentOffset() {
+    short getFragmentOffset() {
         return fragmentOffset;
     }
 
-    public byte getTimeToLive() {
+    byte getTimeToLive() {
         return timeToLive;
     }
 
-    public byte getProtocol() {
+    byte getProtocol() {
         return protocol;
     }
 
-    public short getHeaderChecksum() {
+    short getHeaderChecksum() {
         return headerChecksum;
     }
 
-    public int getSourceAddress() {
+    int getSourceAddress() {
         return sourceAddress;
     }
 
-    public int getDestinationAddress() {
+    int getDestinationAddress() {
         return destinationAddress;
     }
 }

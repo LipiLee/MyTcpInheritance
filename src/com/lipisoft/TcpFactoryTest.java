@@ -1,5 +1,9 @@
 package com.lipisoft;
 
+import com.lipisoft.ip.IpV4;
+import com.lipisoft.ip.IpV4Factory;
+import com.lipisoft.tcp.*;
+import com.lipisoft.tcp.Number;
 import com.sun.istack.internal.NotNull;
 import org.junit.After;
 import org.junit.Before;
@@ -113,8 +117,10 @@ public class TcpFactoryTest {
         final int destinationAddress = 0xc0a8006b;
         final short sourcePort = 80;
         final short destinationPort = (short) 0xe03a;
+        final Port port = new Port(sourcePort, destinationPort);
         final int sequence = 0xdd5058f7;
         final int acknowledgement = 1803144046;
+        final Number number = new Number(sequence, acknowledgement);
         final boolean NS = false;
         final boolean CWR = false;
         final boolean ECE = false;
@@ -124,22 +130,32 @@ public class TcpFactoryTest {
         final boolean RST = false;
         final boolean SYN = true;
         final boolean FIN = false;
+        final ControlFlags controlFlags = new ControlFlags(NS, CWR, ECE, URG, ACK, PSH, RST, SYN, FIN);
         final short windowSize = 14480;
         final short urgentPointer = 0;
 
-        final Tcp.OutgoingTcpBuilder builder = new Tcp.OutgoingTcpBuilder(sourceAddress, destinationAddress, sourcePort,
-                destinationPort, sequence, acknowledgement, NS, CWR, ECE, URG, ACK, PSH, RST, SYN, FIN, windowSize,
-                urgentPointer);
+        final Tcp.OutgoingTcpBuilder builder = new Tcp.OutgoingTcpBuilder(sourceAddress, destinationAddress, port,
+                number, controlFlags, windowSize, urgentPointer);
 
         final short maxSegmentSize = 1460;
         final boolean selectiveAckPermitted = true;
+        final List<SelectiveAck> selectiveAcks = new ArrayList<>();
         final int sender = 0xe41ea430;
         final int echoReply = 690506430;
         final TimeStamp time = new TimeStamp(sender, echoReply);
         final byte windowScale = 8;
+        final ByteBuffer tcpPayload = ByteBuffer.allocate(0);
 
-        final Tcp tcp = builder.applyMaxSegmentSize(maxSegmentSize).applySelectiveAckPermitted(selectiveAckPermitted)
-                .applyTimeStamp(time).applyWindowScale(windowScale).build();
+//        final Tcp tcp = builder.applyMaxSegmentSize(maxSegmentSize).applySelectiveAckPermitted(selectiveAckPermitted)
+//                .applySelectiveAcks(selectiveAcks).applyTimeStamp(time).applyWindowScale(windowScale)
+//                .applyTcpPayload(tcpPayload).build();
+        builder.applyMaxSegmentSize(maxSegmentSize);
+        builder.applySelectiveAckPermitted(selectiveAckPermitted);
+        builder.applySelectiveAcks(selectiveAcks);
+        builder.applyTimeStamp(time);
+        builder.applyWindowScale(windowScale);
+        builder.applyTcpPayload(tcpPayload);
+        final Tcp tcp = builder.build();
 
         final byte version = 4;
         final byte internetHeaderLength = 5;
@@ -166,8 +182,6 @@ public class TcpFactoryTest {
 
         final short headerChecksum = ip.getHeaderChecksum();
 
-        final List<SelectiveAck> selectiveAcks = new ArrayList<>();
-
         final IpTest ipTest = new IpTest(version, internetHeaderLength, differentiatedServiceCodePoint,
                 explicitCongestionNotification, totalLength, identification, doNotFragment, moreFragment, fragmentOffset,
                 timeToLive, protocol, headerChecksum, sourceAddress, destinationAddress);
@@ -179,7 +193,6 @@ public class TcpFactoryTest {
                 selectiveAckPermitted, sender, echoReply, selectiveAcks, ByteBuffer.allocate(0));
 
         testStream(packetStream, ipTest, tcpTest);
-
     }
 
     private void testStream(@NotNull ByteBuffer stream, @NotNull IpTest ip, @NotNull TcpTest tcp) {
@@ -201,46 +214,38 @@ public class TcpFactoryTest {
         assertEquals(ipV4Packet.getDestinationAddress(), ip.getDestinationAddress());
 
         final Tcp tcpPacket = ipV4Packet.getTcp();
-        assertEquals(tcpPacket.getSourcePort(), tcp.getSourcePort());
-        assertEquals(tcpPacket.getDestinationPort(), tcp.getDestinationPort());
-        assertEquals(tcpPacket.getSequenceNumber(), tcp.getSequenceNumber());
-        assertEquals(tcpPacket.getAcknowledgeNumber(), tcp.getAcknowledgeNumber());
+        final Port port = tcpPacket.getPort();
+        assertEquals(port.getSource(), tcp.getSourcePort());
+        assertEquals(port.getDestination(), tcp.getDestinationPort());
+
+        final Number number = tcpPacket.getNumber();
+        assertEquals(number.getSequence(), tcp.getSequenceNumber());
+        assertEquals(number.getAcknowledgement(), tcp.getAcknowledgeNumber());
         assertEquals(tcpPacket.getDataOffset(), tcp.getDataOffset());
-        assertEquals(tcpPacket.getNS(), tcp.isNS());
-        assertEquals(tcpPacket.getCWR(), tcp.isCWR());
-        assertEquals(tcpPacket.getECE(), tcp.isECE());
-        assertEquals(tcpPacket.getURG(), tcp.isURG());
-        assertEquals(tcpPacket.getACK(), tcp.isACK());
-        assertEquals(tcpPacket.getPSH(), tcp.isPSH());
-        assertEquals(tcpPacket.getRST(), tcp.isRST());
-        assertEquals(tcpPacket.getSYN(), tcp.isSYN());
-        assertEquals(tcpPacket.getFIN(), tcp.isFIN());
+
+        final ControlFlags controlFlags = tcpPacket.getControlFlags();
+        assertEquals(controlFlags.isNS(), tcp.isNS());
+        assertEquals(controlFlags.isCWR(), tcp.isCWR());
+        assertEquals(controlFlags.isECE(), tcp.isECE());
+        assertEquals(controlFlags.isURG(), tcp.isURG());
+        assertEquals(controlFlags.isACK(), tcp.isACK());
+        assertEquals(controlFlags.isPSH(), tcp.isPSH());
+        assertEquals(controlFlags.isRST(), tcp.isRST());
+        assertEquals(controlFlags.isSYN(), tcp.isSYN());
+        assertEquals(controlFlags.isFIN(), tcp.isFIN());
         assertEquals(tcpPacket.getWindowSize(), tcp.getWindowSize());
         assertEquals(tcpPacket.getChecksum(), tcp.getChecksum());
         assertEquals(tcpPacket.getUrgentPointer(), tcp.getUrgentPointer());
 
-        assertEquals(tcpPacket.getMaxSegmentSize(), tcp.getMaximumSegmentSize());
-        assertEquals(tcpPacket.getWindowScale(), tcp.getWindowScale());
-        assertEquals(tcpPacket.isSelectiveAckPermitted(), tcp.isSelectiveAcknowledgePermitted());
-        assertEquals(tcpPacket.getTime().getSender(), tcp.getSenderTime());
-        assertEquals(tcpPacket.getTime().getEchoReply(), tcp.getEchoTime());
-//        assertThat(tcpPacket.getSelectiveAcks(), tcp.getSelectiveAcks());
-        assertEqualsList(tcpPacket.getSelectiveAcks(), tcp.getSelectiveAcks());
+        final Options options = tcpPacket.getOptions();
+        assertEquals(options.getMaxSegmentSize(), tcp.getMaximumSegmentSize());
+        assertEquals(options.getWindowScale(), tcp.getWindowScale());
+        assertEquals(options.isSelectiveAckPermitted(), tcp.isSelectiveAcknowledgePermitted());
+        final TimeStamp timeStamp = options.getTimeStamp();
+        assertEquals(timeStamp.getSender(), tcp.getSenderTime());
+        assertEquals(timeStamp.getEchoReply(), tcp.getEchoTime());
+        assertEquals(options.getSelectiveAcks(), tcp.getSelectiveAcks());
         assertEquals(tcpPacket.getTcpPayloadStream(), tcp.getPayload());
-    }
-
-    private void assertEqualsList(@NotNull List<SelectiveAck> expected, @NotNull List<SelectiveAck> actual) {
-here:   for (SelectiveAck expectedOne : expected) {
-            final int begin = expectedOne.getBegin();
-            final int end = expectedOne.getEnd();
-
-            for (SelectiveAck actualOne : actual) {
-                if (begin == actualOne.getBegin() && end == actualOne.getEnd()) {
-                    continue here;
-                }
-            }
-            assertEquals(expected, actual);
-        }
     }
 
     private void testTcpSynStream() {

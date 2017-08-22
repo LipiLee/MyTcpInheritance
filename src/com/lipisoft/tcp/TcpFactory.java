@@ -1,4 +1,4 @@
-package com.lipisoft;
+package com.lipisoft.tcp;
 
 import com.sun.istack.internal.NotNull;
 
@@ -6,7 +6,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-class TcpFactory {
+public class TcpFactory {
     private static final int END_OF_OPTIONS_LIST = 0;
     private static final int NO_OPERATION = 1;
     private static final int MAX_SEGMENT_SIZE = 2;
@@ -16,14 +16,16 @@ class TcpFactory {
     private static final int TIME_STAMP = 8;
 
     @NotNull
-    static Tcp createTCP(@NotNull ByteBuffer packet) throws RuntimeException {
+    public static Tcp createTCP(@NotNull ByteBuffer packet) throws RuntimeException {
         final short sourcePort = packet.getShort();
         final short destinationPort = packet.getShort();
+        final Port port = new Port(sourcePort, destinationPort);
         final int seq = packet.getInt();
         final int ack = packet.getInt();
+        final Number number = new Number(seq, ack);
         final byte dataOffsetAndNs = packet.get();
 
-        final byte dataOffset = (byte) (((dataOffsetAndNs & 0xF0) >>> 4));
+        final byte dataOffset = (byte) (((dataOffsetAndNs & 0xF0) >> 4));
         if (dataOffset < 5) {
             throw new RuntimeException("DataOffset is invalid in TCP. Packet is corrupted");
         }
@@ -38,12 +40,13 @@ class TcpFactory {
         final boolean RST = ((controlBits >> 2) & 1) == 1;
         final boolean SYN = ((controlBits >> 1) & 1) == 1;
         final boolean FIN = (controlBits & 1) == 1;
+        final ControlFlags controlFlags = new ControlFlags(NS, CWR, ECE, URG, ACK, PSH, RST, SYN, FIN);
         final short windowSize = packet.getShort();
         final short checksum = packet.getShort();
         final short urgentPointer = packet.getShort();
 
-        final Tcp.IncomingTcpBuilder builder = new Tcp.IncomingTcpBuilder(sourcePort, destinationPort, seq, ack,
-                dataOffset, NS, CWR, ECE, URG, ACK, PSH, RST, SYN, FIN, windowSize, checksum, urgentPointer);
+        final Tcp.IncomingTcpBuilder builder = new Tcp.IncomingTcpBuilder(port, number, dataOffset, controlFlags,
+                windowSize, checksum, urgentPointer);
 
         if (dataOffset > 5) {
             handleTcpOptions(builder, packet, dataOffset * 4 - 20);
@@ -132,7 +135,6 @@ class TcpFactory {
                     index = index + size - 2;
                     break;
             }
-
         }
     }
 

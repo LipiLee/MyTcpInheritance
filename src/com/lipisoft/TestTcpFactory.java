@@ -1,5 +1,7 @@
 package com.lipisoft;
 
+import com.lipisoft.tcp.Tcp;
+import com.lipisoft.tcp.TcpFactory;
 import com.sun.istack.internal.NotNull;
 
 import java.nio.ByteBuffer;
@@ -63,19 +65,19 @@ class TestTcpFactory {
     }
 
     private boolean isEqualSourcePort() {
-        return tcp.getSourcePort() == sourcePort;
+        return tcp.getPort().getSource() == sourcePort;
     }
 
     private boolean isEqualDestinationPort() {
-        return tcp.getDestinationPort() == destinationPort;
+        return tcp.getPort().getDestination() == destinationPort;
     }
 
     private boolean isEqualSequenceNumber() {
-        return tcp.getSequenceNumber() == seq;
+        return tcp.getNumber().getSequence() == seq;
     }
 
     private boolean isEqualAcknowledgeNumber() {
-        return tcp.getAcknowledgeNumber() == ack;
+        return tcp.getNumber().getAcknowledgement() == ack;
     }
 
     private boolean isEqualDataOffset() {
@@ -83,39 +85,39 @@ class TestTcpFactory {
     }
 
     private boolean isEqualNS() {
-        return tcp.getNS() == NS;
+        return tcp.getControlFlags().isNS() == NS;
     }
 
     private boolean isEqualCWR() {
-        return tcp.getCWR() == CWR;
+        return tcp.getControlFlags().isCWR() == CWR;
     }
 
     private boolean isEqualECE() {
-        return tcp.getECE() == ECE;
+        return tcp.getControlFlags().isECE() == ECE;
     }
 
     private boolean isEqualURG() {
-        return tcp.getURG() == URG;
+        return tcp.getControlFlags().isURG() == URG;
     }
 
     private boolean isEqualACK() {
-        return tcp.getACK() == ACK;
+        return tcp.getControlFlags().isACK() == ACK;
     }
 
     private boolean isEqualPSH() {
-        return tcp.getPSH() == PSH;
+        return tcp.getControlFlags().isPSH() == PSH;
     }
 
     private boolean isEqualRST() {
-        return tcp.getRST() == RST;
+        return tcp.getControlFlags().isRST() == RST;
     }
 
     private boolean isEqualSYN() {
-        return tcp.getSYN() == SYN;
+        return tcp.getControlFlags().isSYN() == SYN;
     }
 
     private boolean isEqualFIN() {
-        return tcp.getFIN() == FIN;
+        return tcp.getControlFlags().isFIN() == FIN;
     }
 
     private boolean isEqualWindowSize() {

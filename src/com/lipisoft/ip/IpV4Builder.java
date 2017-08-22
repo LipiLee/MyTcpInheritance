@@ -1,4 +1,6 @@
-package com.lipisoft;
+package com.lipisoft.ip;
+
+import com.lipisoft.tcp.Tcp;
 
 import java.nio.ByteBuffer;
 

@@ -1,11 +1,12 @@
 package com.lipisoft;
 
+import com.lipisoft.tcp.SelectiveAck;
 import com.sun.istack.internal.NotNull;
 
 import java.nio.ByteBuffer;
 import java.util.List;
 
-public class TcpTest {
+class TcpTest {
     private final short sourcePort;
     private final short destinationPort;
     private final int sequenceNumber;
@@ -31,7 +32,7 @@ public class TcpTest {
     @NotNull private final List<SelectiveAck> selectiveAcks;
     @NotNull private final ByteBuffer payload;
 
-    public TcpTest(short sourcePort, short destinationPort, int sequenceNumber, int acknowledgeNumber, byte dataOffset,
+    TcpTest(short sourcePort, short destinationPort, int sequenceNumber, int acknowledgeNumber, byte dataOffset,
                    boolean NS, boolean CWR, boolean ECE, boolean URG, boolean ACK, boolean PSH, boolean RST, boolean SYN,
                    boolean FIN, short windowSize, short checksum, short urgentPointer, short maximumSegmentSize,
                    byte windowScale, boolean selectiveAcknowledgePermitted, int senderTime, int echoTime,
@@ -62,99 +63,99 @@ public class TcpTest {
         this.payload = payload;
     }
 
-    public short getSourcePort() {
+    short getSourcePort() {
         return sourcePort;
     }
 
-    public short getDestinationPort() {
+    short getDestinationPort() {
         return destinationPort;
     }
 
-    public int getSequenceNumber() {
+    int getSequenceNumber() {
         return sequenceNumber;
     }
 
-    public int getAcknowledgeNumber() {
+    int getAcknowledgeNumber() {
         return acknowledgeNumber;
     }
 
-    public byte getDataOffset() {
+    byte getDataOffset() {
         return dataOffset;
     }
 
-    public boolean isNS() {
+    boolean isNS() {
         return NS;
     }
 
-    public boolean isCWR() {
+    boolean isCWR() {
         return CWR;
     }
 
-    public boolean isECE() {
+    boolean isECE() {
         return ECE;
     }
 
-    public boolean isURG() {
+    boolean isURG() {
         return URG;
     }
 
-    public boolean isACK() {
+    boolean isACK() {
         return ACK;
     }
 
-    public boolean isPSH() {
+    boolean isPSH() {
         return PSH;
     }
 
-    public boolean isRST() {
+    boolean isRST() {
         return RST;
     }
 
-    public boolean isSYN() {
+    boolean isSYN() {
         return SYN;
     }
 
-    public boolean isFIN() {
+    boolean isFIN() {
         return FIN;
     }
 
-    public short getWindowSize() {
+    short getWindowSize() {
         return windowSize;
     }
 
-    public short getChecksum() {
+    short getChecksum() {
         return checksum;
     }
 
-    public short getUrgentPointer() {
+    short getUrgentPointer() {
         return urgentPointer;
     }
 
-    public short getMaximumSegmentSize() {
+    short getMaximumSegmentSize() {
         return maximumSegmentSize;
     }
 
-    public byte getWindowScale() {
+    byte getWindowScale() {
         return windowScale;
     }
 
-    public boolean isSelectiveAcknowledgePermitted() {
+    boolean isSelectiveAcknowledgePermitted() {
         return selectiveAcknowledgePermitted;
     }
 
-    public int getSenderTime() {
+    int getSenderTime() {
         return senderTime;
     }
 
-    public int getEchoTime() {
+    int getEchoTime() {
         return echoTime;
     }
 
-    public List<SelectiveAck> getSelectiveAcks() {
+    List<SelectiveAck> getSelectiveAcks() {
         return selectiveAcks;
     }
 
-    public ByteBuffer getPayload() {
+    ByteBuffer getPayload() {
         return payload;
     }
 }
