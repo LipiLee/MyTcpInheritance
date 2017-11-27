@@ -168,10 +168,6 @@ public class TcpFactory {
     }
 
     private static ByteBuffer obtainTcpPayload(@NotNull ByteBuffer packet) {
-        final ByteBuffer tcpPayload = ByteBuffer.allocate(packet.remaining());
-        tcpPayload.put(packet);
-        tcpPayload.rewind();
-
-        return tcpPayload;
+        return packet.asReadOnlyBuffer().slice();
     }
 }
