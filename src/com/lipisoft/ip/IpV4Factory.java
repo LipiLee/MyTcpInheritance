@@ -26,10 +26,10 @@ public class IpV4Factory {
         final int sourceAddress = stream.getInt();
         final int destinationAddress = stream.getInt();
 
+        final ByteBuffer ipStream = stream.asReadOnlyBuffer();
+        ipStream.flip();
+
         final Tcp tcp = TcpFactory.createTCP(stream);
-        final ByteBuffer ipStream = ByteBuffer.allocate(IpV4.IPV4_HEADER_SIZE);
-        stream.rewind();
-        ipStream.put(stream.array(), 0, IpV4.IPV4_HEADER_SIZE);
 
         return new IpV4.IncomingIpV4Builder(version, internetHeaderLength, differentiatedServiceCodePoint,
                 explicitCongestionNotification, totalLength, identification, doNotFragment, moreFragments, fragmentOffset,
